@@ -30,6 +30,8 @@ command -v media-ctl && media-ctl -p || true
 
 OpenCV 只在导入和采集成功后使用；不要把桌面电脑的 camera index、分辨率或 backend 直接复制到板端。最小验证应记录设备、打开方式、实际帧尺寸、采集是否阻塞、是否有花屏/曝光/颜色问题和连续运行时间。
 
+优先运行 `scripts/probe_camera.py --json` 获取机器可读结果；针对已有工程的候选参数，再显式测试，例如 `--device /dev/video9 --backend v4l2 --width 1280 --height 720 --fps 30 --fourcc MJPG`。候选参数必须和实际输出分开记录。
+
 ## 3. OpenCV 与模型运行时
 
 ```bash
@@ -58,9 +60,19 @@ dmesg | grep -Ei 'tty|uart|gpio|video|camera|v4l2' | tail -100 || true
 
 优先使用当前系统的 libgpiod、设备树和用户已确认的接口。不要根据物理 40 针编号直接推导 Linux GPIO 数字；不要在未知波特率、校验、帧格式或安全动作时生成完整通信协议。
 
+优先运行 `scripts/probe_uart.py --json`。它默认只打开并监听，不发送字节；针对已有工程的候选参数，可显式测试 `--device /dev/ttyS7 --baudrate 115200`，但成功打开只证明端口可访问，不证明它连接了目标下位机或协议正确。
+
 如果下位机负责巡迹、电机或安全控制，先保持职责边界：RK3566 输出已确认的视觉结果、坐标误差或状态，下位机执行已确认的控制逻辑。
 
-## 5. Remote-SSH 运行约定
+## 5. GPIO 探测
+
+运行 `scripts/probe_gpio.py --json` 只读取 `/dev/gpiochip*` 和 `gpioinfo` 信息。它不会申请 line、改变方向或写入电平。40 针编号、`GPIOx_y`、gpiochip 和 line offset 必须在当前设备树/Pinmux/实板上建立对应关系后，才允许设计读写测试。
+
+## 6. RKNN/NPU 探测
+
+运行 `scripts/probe_rknn.py --json` 只检查可导入模块、常见设备节点和动态库。发现 `rknnlite`、`rknn` 或 `librknn` 不代表模型一定能运行；还需要确认 Toolkit、转换工具、板端 runtime、NPU 驱动、模型格式、量化和输入输出。
+
+## 7. Remote-SSH 运行约定
 
 在 VS Code 中优先完成：打开泰山派上的项目目录；在 Remote-SSH 终端确认当前主机、路径、用户和权限；运行最小采集或算法验证；记录终端输出、日志和版本信息；逐步加入通信和执行机构。
 

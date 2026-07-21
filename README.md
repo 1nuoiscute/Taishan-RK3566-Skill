@@ -63,7 +63,7 @@
 - `SKILL.md`：触发描述、核心门禁和工作流；
 - `references/`：板端运行时、视觉任务、架构、调试、来源和验证方法；
 - `templates/`：题目需求、快速验证、方案矩阵、串口决策、工程结构、性能、调试和验收模板；
-- `scripts/`：只读板端探针，目前包含系统基线探针；
+- `scripts/`：只读板端探针，目前包含系统基线、OpenCV/V4L2 摄像头、安全 UART 监听、GPIO 芯片发现和 RKNN/NPU 运行时发现探针；
 - `agents/openai.yaml`：Skill 列表中的界面信息。
 
 ## Remote-SSH 与 Codex 边界
