@@ -12,9 +12,15 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 只在需要时读取相关资料，避免一次加载全部参考文档。
 
 - **资料和来源边界**：读取 [source-index.md](references/source-index.md)。区分官方硬件资料、官方 Wiki 的“共建”案例、竞赛题目和待验证经验。
+- **题目索引和陌生题**：读取 [nuedc-topic-coverage.md](references/nuedc-topic-coverage.md)。先匹配视觉模式，再处理陌生题；不要强套历史题。
+- **研究和来源分级**：读取 [research-guidance.md](references/research-guidance.md)。题目规则、硬件、版本、API 或路线存在不确定性时使用。
 - **板端环境发现**：读取 [board-and-runtime.md](references/board-and-runtime.md)。适用于 VS Code Remote-SSH 直连、摄像头、GPIO、UART、OpenCV 和模型运行时检查。
 - **视觉任务分类**：读取 [vision-task-archetypes.md](references/vision-task-archetypes.md)。题目涉及测量、跟踪、瞄准、空间盘点或其他视觉任务时，只加载匹配章节。
+- **工程架构**：读取 [architecture-patterns.md](references/architecture-patterns.md)。方案确认后确定模块、状态和可替换点。
+- **调试顺序**：读取 [debugging-playbook.md](references/debugging-playbook.md)。出现采集、算法、模型、通信、闭环或性能问题时使用。
+- **已有工程接入**：读取 [existing-project-integration.md](references/existing-project-integration.md)。用户提供代码、协议、接线或运行工程时先使用。
 - **验证和证据**：读取 [validation-and-evidence.md](references/validation-and-evidence.md)。需要性能、误差、闭环或验收结论时使用。
+- **发布前回归**：读取 [validation-scenarios.md](references/validation-scenarios.md)。修改 Skill、模板或参考资料后执行匹配场景。
 - **需求模板**：按需使用 `templates/` 下的需求、方案、架构和验收模板。
 
 ## 硬规则
@@ -29,12 +35,16 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 8. 先完成相机采集、单帧算法、通信或执行机构的独立最小验证，再做闭环联调。每轮只改变一个主要变量。
 9. 性能、帧率、延迟、精度、稳定运行时间和资源占用必须来自目标板实测。没有实测数据时标记为“待实测”，不能用桌面电脑结果代替。
 10. 生成工程时只创建有真实职责的文件。默认从单一入口和最小目录开始；只有参数复用、模块边界、独立风险或测试需要时才拆分文件。板端路径使用项目相对路径，不依赖用户电脑绝对路径。
+11. 题目、硬件、系统、API、版本或方案存在明显不确定性时，先按 `references/research-guidance.md` 形成研究卡；官方资料和原始题面用于确认事实，公开案例只用于补充路线和失败模式。
+12. 高影响项未确认前，只能输出比较、假设和最小验证，不把候选协议、引脚、坐标、模型、工程结构或安全动作当成最终实现。
 
 ## 工作流
 
 ### 1. 建立题目约束卡
 
 读取 `templates/task-intake.md`，提取目标、评分点、验收方式、场景、目标外观、允许硬件、执行机构、通信、安全限制和信息缺口。信息不足时先输出缺口和可选假设，不直接生成最终协议或完整闭环代码。
+
+用户只请求一个低风险、范围明确的 API、命令、语法或单硬件测试时，读取 `templates/quick-check-intake.md`，只输出自包含的探测/验证代码、预期现象、失败排查和下一步，不启动完整方案矩阵。
 
 ### 2. 分类视觉任务
 
@@ -45,6 +55,8 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 读取 `templates/solution-options.md`。只有存在真实取舍时才给出 2-3 个方案，否则给出一条推荐路线和被排除的路线。每个保留方案说明观测量、坐标系、标定、板端依赖、延迟、风险、降级方式、接口和最小验证。
 
 默认顺序是：能用稳定颜色/几何/标定解决就不引入模型；需要类别语义或复杂外观时再评估 OpenCV DNN、RKNN 或其他运行时。缺少授权模型、数据集或目标板实测时，标记阻塞项。
+
+用户确认方案及高影响项前，等待选择，不直接生成完整闭环代码。需要通信时读取 `templates/serial-protocol-decision.md`，单独确认是否需要序号、ACK、心跳、重发和超时；不得因“常见做法”自动加入。
 
 ### 4. 发现板端运行环境
 
@@ -62,17 +74,23 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 遇到低帧率、误检、抖动、丢目标、串口积压、模型失败或重启时，先给证据、可能瓶颈、低风险优化和回归测试，不直接改动高影响坐标、协议或安全参数。
 
+用户提供已有工程时，先读取 `references/existing-project-integration.md`，建立现状清单并保留已确认接口；需要记录“电脑看到、程序输出、板端执行、评分达成”的证据时，使用 `templates/debug-evidence.md`。
+
 ### 7. 形成可交付工程和验收报告
 
 读取 `templates/project-architecture.md` 和 `templates/acceptance-checklist.md`。输出完整项目树、唯一入口、真实依赖、部署/运行方式、配置说明、最小测试和验收记录；不只给零散代码片段。
 
 按 `references/validation-and-evidence.md` 区分采集帧率、视觉处理帧率、端到端延迟、误差、控制发布频率、连续运行时间和异常次数。没有目标板数据就保留“待实测”。
 
+涉及模型时，读取 `templates/yolo-data-and-training.md`；涉及性能数字时，读取 `templates/performance-report.md`。
+
 ## 回答格式
 
 涉及新题目或复杂改动时，按以下顺序回答：已确认约束与待确认项；视觉任务分类和推荐路线；坐标、标定、状态和接口约定；最小验证步骤；工程结构与代码；预期现象、失败排查和降级方案；验收指标与仍待实测内容。
 
 用户只问一个低风险 API、命令或语法问题时，缩小范围，只给必要的探测/验证代码和边界，不强行启动完整方案选择流程。
+
+修改 Skill、模板或参考资料后，按 `references/validation-scenarios.md` 执行至少一个匹配场景；若出现信息不足时擅自定协议、已有工程未先阅读、无数据集却声称模型可用或无实测却声称达标，不能发布该版本。
 
 ## 安全与发布边界
 
