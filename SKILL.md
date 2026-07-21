@@ -37,6 +37,7 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 10. 生成工程时只创建有真实职责的文件。默认从单一入口和最小目录开始；只有参数复用、模块边界、独立风险或测试需要时才拆分文件。板端路径使用项目相对路径，不依赖用户电脑绝对路径。
 11. 题目、硬件、系统、API、版本或方案存在明显不确定性时，先按 `references/research-guidance.md` 形成研究卡；官方资料和原始题面用于确认事实，公开案例只用于补充路线和失败模式。
 12. 高影响项未确认前，只能输出比较、假设和最小验证，不把候选协议、引脚、坐标、模型、工程结构或安全动作当成最终实现。
+13. 区分 Codex 当前可访问的本地工作区和 VS Code Remote-SSH 连接的泰山派。若 Codex 没有远程终端权限，不得声称已经执行板端命令、读取板端日志或完成实板验证；应生成可复制命令，要求用户在 Remote-SSH 终端运行，并分析用户返回的输出或 JSON 证据。
 
 ## 工作流
 
@@ -63,6 +64,8 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 对于 VS Code Remote-SSH，用户在 VS Code 界面中编辑、编译、运行和查看日志，但所有文件、编译器、程序和日志位于泰山派 Linux。读取 `references/board-and-runtime.md`，先检查实际系统和能力，不把 ADB、scrcpy、VirtualBox 或 Docker 设为必需。
 
 至少完成系统/内核/架构识别、摄像头设备和后端检查、OpenCV 导入或编译检查、串口/GPIO 能力检查，以及目标模型运行时检查。工具不存在时给出替代检查，不伪造成功。
+
+若当前 Codex 只连接用户电脑而不能访问 VS Code 的远程终端，则把探针当作用户执行的验证工件：给出工作目录、完整命令、预期输出、退出码和保存方式；用户执行后返回文本、JSON、日志或截图，才能更新平台事实。
 
 ### 5. 先交付最小验证
 

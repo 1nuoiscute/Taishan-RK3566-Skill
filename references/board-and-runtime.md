@@ -65,3 +65,16 @@ dmesg | grep -Ei 'tty|uart|gpio|video|camera|v4l2' | tail -100 || true
 在 VS Code 中优先完成：打开泰山派上的项目目录；在 Remote-SSH 终端确认当前主机、路径、用户和权限；运行最小采集或算法验证；记录终端输出、日志和版本信息；逐步加入通信和执行机构。
 
 ADB、scrcpy、VirtualBox、Docker 和离线打包是可选环境分支，不能覆盖用户已经确认的 Remote-SSH 工作流。
+
+## 6. Codex 可访问性边界
+
+VS Code Remote-SSH 能让 VS Code 的编辑器、终端和部分扩展在泰山派环境中工作，但不代表当前 Codex 会自动获得该远程终端的执行权限。
+
+当 Codex 只能访问本地电脑时：
+
+1. 不声称已经运行板端脚本或读取板端日志；
+2. 输出用户可复制到 Remote-SSH 终端的完整命令；
+3. 建议使用 `--text` 查看结果，使用 `--json > artifact.json` 保存机器可读证据；
+4. 要求用户把输出文件、文本或截图返回后，再更新“实板已验证”结论。
+
+只有当 Codex 实际运行在泰山派或已经获得远程 shell 工具时，才能直接执行探针并报告板端结果。
