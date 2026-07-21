@@ -15,6 +15,7 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 - **题目索引和陌生题**：读取 [nuedc-topic-coverage.md](references/nuedc-topic-coverage.md)。先匹配视觉模式，再处理陌生题；不要强套历史题。
 - **研究和来源分级**：读取 [research-guidance.md](references/research-guidance.md)。题目规则、硬件、版本、API 或路线存在不确定性时使用。
 - **板端环境发现**：读取 [board-and-runtime.md](references/board-and-runtime.md)。适用于 VS Code Remote-SSH 直连、摄像头、GPIO、UART、OpenCV 和模型运行时检查。
+- **真实基线探测**：运行 `scripts/run_baseline.sh`，或按需运行 `scripts/probe_*.py` 与 `scripts/probe_system.sh`；保存 JSON、stderr 和命令版本后再称为“实板基线”。
 - **视觉任务分类**：读取 [vision-task-archetypes.md](references/vision-task-archetypes.md)。题目涉及测量、跟踪、瞄准、空间盘点或其他视觉任务时，只加载匹配章节。
 - **工程架构**：读取 [architecture-patterns.md](references/architecture-patterns.md)。方案确认后确定模块、状态和可替换点。
 - **调试顺序**：读取 [debugging-playbook.md](references/debugging-playbook.md)。出现采集、算法、模型、通信、闭环或性能问题时使用。
@@ -63,6 +64,8 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 对于 VS Code Remote-SSH，用户在 VS Code 界面中编辑、编译、运行和查看日志，但所有文件、编译器、程序和日志位于泰山派 Linux。读取 `references/board-and-runtime.md`，先检查实际系统和能力，不把 ADB、scrcpy、VirtualBox 或 Docker 设为必需。
 
+用户提供板端 JSON、日志或性能记录时，将其标为“当前用户环境的实测证据”；可以用来分析该环境和验证探针，但不能把其中的设备节点、分辨率、协议或性能数字推广为所有泰山派用户的默认配置。
+
 至少完成系统/内核/架构识别、摄像头设备和后端检查、OpenCV 导入或编译检查、串口/GPIO 能力检查，以及目标模型运行时检查。工具不存在时给出替代检查，不伪造成功。
 
 若当前 Codex 只连接用户电脑而不能访问 VS Code 的远程终端，则把探针当作用户执行的验证工件：给出工作目录、完整命令、预期输出、退出码和保存方式；用户执行后返回文本、JSON、日志或截图，才能更新平台事实。
@@ -86,6 +89,8 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 按 `references/validation-and-evidence.md` 区分采集帧率、视觉处理帧率、端到端延迟、误差、控制发布频率、连续运行时间和异常次数。没有目标板数据就保留“待实测”。
 
 涉及模型时，读取 `templates/yolo-data-and-training.md`；涉及性能数字时，读取 `templates/performance-report.md`。
+
+端到端参考项目可从 `examples/vision-uart-baseline/` 开始，但必须先按 `README.md` 分阶段验证摄像头、算法和 UART；示例 JSON Lines 不是用户已确认的比赛协议。
 
 ## 回答格式
 

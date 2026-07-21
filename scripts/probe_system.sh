@@ -49,7 +49,8 @@ json_quote() {
 }
 
 first_line() {
-    printf '%s' "$1" | sed -n '1p'
+    local value="${1-}"
+    printf '%s' "$value" | sed -n '1p'
 }
 
 tool_status() {
@@ -63,6 +64,9 @@ tool_status() {
 
 tool_version() {
     local name="$1"
+    if [ "$(tool_status "$name")" != "installed" ]; then
+        return 0
+    fi
     case "$name" in
         python3) python3 --version 2>&1 | first_line ;;
         gcc) gcc --version 2>&1 | first_line ;;

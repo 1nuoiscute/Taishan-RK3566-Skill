@@ -1,0 +1,8 @@
+/scripts/__pycache__/
+/examples/**/__pycache__/
+/baseline-*/
+/camera-baseline.json
+/uart-baseline.json
+/gpio-baseline.json
+/rknn-baseline.json
+*.stderr.log
