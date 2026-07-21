@@ -2,6 +2,10 @@
 
 > 面向电赛视觉的 RK3566 Linux 工程验证型 Codex Skill。
 
+> ![License](https://img.shields.io/badge/License-MIT-blue.svg)
+![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
+![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
+
 它帮助使用立创·泰山派 RK3566 参加电赛视觉类题目，围绕“题目约束、板端能力、视觉方案、通信边界和验收证据”组织整个开发过程。
 
 ![泰山派 RK3566](https://img.1nuo.me/blog/2026/07/21/20260721235036347.webp)
@@ -34,6 +38,10 @@ Taishan Skill 的作用，就是把这些问题变成可检查、可验证、可
 它参考 [MaixCAM-skill](https://github.com/LanHua01/MaixCAM-skill) 的工程方法，但不复制 MaixPy、MaixVision 或固定赛题代码。
 
 ## 快速开始
+
+### 0. 安装 Skill
+在 Codex 中输入：
+`请使用 $skill-installer 从 GitHub 仓库 1nuoiscute/taishan-rk3566-skill 安装 taishan-rk3566 Skill`
 
 ### 1. 在 Codex 中调用
 
