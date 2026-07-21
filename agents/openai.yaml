@@ -1,0 +1,4 @@
+interface:
+  display_name: "泰山派 RK3566 电赛视觉"
+  short_description: "面向泰山派 RK3566 的电赛视觉方案、调试与验收工作流"
+  default_prompt: "使用 $taishan-rk3566 分析这道电赛视觉题并给出可验证的板端实现方案。"
