@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">泰山派 RK3566 电赛视觉工作流占位图</title>
+  <desc id="desc">题目约束、板端探测、视觉验证、通信闭环和验收证据五个阶段。</desc>
+  <rect width="1200" height="420" rx="24" fill="#f4f7fb"/>
+  <text x="600" y="62" text-anchor="middle" font-family="sans-serif" font-size="28" font-weight="700" fill="#152238">Taishan RK3566 · 电赛视觉工程工作流</text>
+  <text x="600" y="98" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#52657d">图片占位符：后续可替换为实物图或正式架构图</text>
+  <g font-family="sans-serif" text-anchor="middle">
+    <g transform="translate(55 160)">
+      <rect width="190" height="120" rx="16" fill="#dbeafe" stroke="#60a5fa" stroke-width="2"/>
+      <text x="95" y="52" font-size="21" font-weight="700" fill="#1e3a8a">题目约束</text>
+      <text x="95" y="82" font-size="15" fill="#1e40af">目标 · 评分 · 误差</text>
+    </g>
+    <g transform="translate(285 160)">
+      <rect width="190" height="120" rx="16" fill="#dcfce7" stroke="#4ade80" stroke-width="2"/>
+      <text x="95" y="52" font-size="21" font-weight="700" fill="#14532d">板端探测</text>
+      <text x="95" y="82" font-size="15" fill="#166534">系统 · 相机 · 接口</text>
+    </g>
+    <g transform="translate(515 160)">
+      <rect width="190" height="120" rx="16" fill="#fef3c7" stroke="#fbbf24" stroke-width="2"/>
+      <text x="95" y="52" font-size="21" font-weight="700" fill="#78350f">视觉验证</text>
+      <text x="95" y="82" font-size="15" fill="#92400e">采集 · 算法 · 坐标</text>
+    </g>
+    <g transform="translate(745 160)">
+      <rect width="190" height="120" rx="16" fill="#fce7f3" stroke="#f472b6" stroke-width="2"/>
+      <text x="95" y="52" font-size="21" font-weight="700" fill="#831843">通信闭环</text>
+      <text x="95" y="82" font-size="15" fill="#9d174d">UART · GPIO · 执行</text>
+    </g>
+    <g transform="translate(975 160)">
+      <rect width="170" height="120" rx="16" fill="#ede9fe" stroke="#a78bfa" stroke-width="2"/>
+      <text x="85" y="52" font-size="21" font-weight="700" fill="#4c1d95">验收证据</text>
+      <text x="85" y="82" font-size="15" fill="#5b21b6">性能 · 误差 · 日志</text>
+    </g>
+  </g>
+  <g stroke="#64748b" stroke-width="3" fill="none" stroke-linecap="round">
+    <path d="M245 220h35"/>
+    <path d="M475 220h35"/>
+    <path d="M705 220h35"/>
+    <path d="M935 220h35"/>
+  </g>
+  <g fill="#64748b">
+    <path d="M280 220l-10-7v14z"/>
+    <path d="M510 220l-10-7v14z"/>
+    <path d="M740 220l-10-7v14z"/>
+    <path d="M970 220l-10-7v14z"/>
+  </g>
+  <text x="600" y="355" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#52657d">先确认真实板端能力，再选择最小可靠视觉方案</text>
+</svg>
+
