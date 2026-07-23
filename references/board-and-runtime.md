@@ -32,7 +32,7 @@ OpenCV 只在导入和采集成功后使用；不要把桌面电脑的 camera in
 
 优先运行 `scripts/probe_camera.py --json` 获取机器可读结果；针对已有工程的候选参数，再显式测试，例如 `--device /dev/video9 --backend v4l2 --width 1280 --height 720 --fps 30 --fourcc MJPG`。候选参数必须和实际输出分开记录。
 
-## 3. OpenCV 与模型运行时
+## 3. OpenCV 与条件触发的模型运行时
 
 ```bash
 python3 - <<'PY'
@@ -48,7 +48,7 @@ command -v rknn_server || true
 find /usr /opt -maxdepth 3 -iname '*rknn*' 2>/dev/null | head -50
 ```
 
-以上只用于探测，不假定命令一定存在。模型路线必须进一步确认模型格式、转换工具、运行时版本、输入布局、量化方式、输出解码和目标板实测延迟。缺少任一关键项时，先提供传统视觉降级路线或标记阻塞项。
+OpenCV 导入是图像方案的基础能力检查。代码块中的 RKNN 命令和 `scripts/probe_rknn.py --json` 只在题目路线需要使用用户已有模型时运行；本轮探测不包含模型转换或真实目标识别。发现运行时也不能证明模型可用，缺少用户提供的授权模型、输入输出约定或目标板证据时，先提供传统视觉降级路线或标记阻塞项。
 
 ## 4. GPIO、UART 和通信
 
@@ -60,7 +60,7 @@ dmesg | grep -Ei 'tty|uart|gpio|video|camera|v4l2' | tail -100 || true
 
 优先使用当前系统的 libgpiod、设备树和用户已确认的接口。不要根据物理 40 针编号直接推导 Linux GPIO 数字；不要在未知波特率、校验、帧格式或安全动作时生成完整通信协议。
 
-优先运行 `scripts/probe_uart.py --json`。它默认只打开并监听，不发送字节；针对已有工程的候选参数，可显式测试 `--device /dev/ttyS7 --baudrate 115200`，但成功打开只证明端口可访问，不证明它连接了目标下位机或协议正确。
+未知设备号时先用上面的只读枚举命令建立候选清单。打开串口需要一个候选波特率；若题目、对端配置或已有工程都未提供，不替用户选择，只停留在可见性检查。候选参数确认后再运行 `scripts/probe_uart.py --json`；它只打开并监听，不发送字节。针对已有工程的候选参数，可显式测试 `--device /dev/ttyS7 --baudrate 115200`，但成功打开只证明端口在该候选配置下可访问，不证明它连接了目标下位机或协议正确。
 
 如果下位机负责巡迹、电机或安全控制，先保持职责边界：RK3566 输出已确认的视觉结果、坐标误差或状态，下位机执行已确认的控制逻辑。
 
@@ -68,7 +68,7 @@ dmesg | grep -Ei 'tty|uart|gpio|video|camera|v4l2' | tail -100 || true
 
 运行 `scripts/probe_gpio.py --json` 只读取 `/dev/gpiochip*` 和 `gpioinfo` 信息。它不会申请 line、改变方向或写入电平。40 针编号、`GPIOx_y`、gpiochip 和 line offset 必须在当前设备树/Pinmux/实板上建立对应关系后，才允许设计读写测试。
 
-## 6. RKNN/NPU 探测
+## 6. RKNN/NPU 探测（仅在模型路线已触发时）
 
 运行 `scripts/probe_rknn.py --json` 只检查可导入模块、常见设备节点和动态库。发现 `rknnlite`、`rknn` 或 `librknn` 不代表模型一定能运行；还需要确认 Toolkit、转换工具、板端 runtime、NPU 驱动、模型格式、量化和输入输出。
 
@@ -78,7 +78,7 @@ dmesg | grep -Ei 'tty|uart|gpio|video|camera|v4l2' | tail -100 || true
 
 ADB、scrcpy、VirtualBox、Docker 和离线打包是可选环境分支，不能覆盖用户已经确认的 Remote-SSH 工作流。
 
-## 6. Codex 可访问性边界
+## 8. Codex 可访问性边界
 
 VS Code Remote-SSH 能让 VS Code 的编辑器、终端和部分扩展在泰山派环境中工作，但不代表当前 Codex 会自动获得该远程终端的执行权限。
 

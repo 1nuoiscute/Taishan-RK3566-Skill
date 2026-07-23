@@ -16,17 +16,18 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 - **研究和来源分级**：读取 [research-guidance.md](references/research-guidance.md)。题目规则、硬件、版本、API 或路线存在不确定性时使用。
 - **板端环境发现**：读取 [board-and-runtime.md](references/board-and-runtime.md)。适用于 VS Code Remote-SSH 直连、摄像头、GPIO、UART、OpenCV 和模型运行时检查。
 - **真实基线探测**：运行 `scripts/run_baseline.sh`，或按需运行 `scripts/probe_*.py` 与 `scripts/probe_system.sh`；保存 JSON、stderr 和命令版本后再称为“实板基线”。
+- **首次使用门禁**：读取 `templates/first-use-gate.md`。首次用户、新题目、环境变化或来源不明的已有工程都先使用。
 - **视觉任务分类**：读取 [vision-task-archetypes.md](references/vision-task-archetypes.md)。题目涉及测量、跟踪、瞄准、空间盘点或其他视觉任务时，只加载匹配章节。
 - **工程架构**：读取 [architecture-patterns.md](references/architecture-patterns.md)。方案确认后确定模块、状态和可替换点。
 - **调试顺序**：读取 [debugging-playbook.md](references/debugging-playbook.md)。出现采集、算法、模型、通信、闭环或性能问题时使用。
 - **已有工程接入**：读取 [existing-project-integration.md](references/existing-project-integration.md)。用户提供代码、协议、接线或运行工程时先使用。
 - **验证和证据**：读取 [validation-and-evidence.md](references/validation-and-evidence.md)。需要性能、误差、闭环或验收结论时使用。
 - **发布前回归**：读取 [validation-scenarios.md](references/validation-scenarios.md)。修改 Skill、模板或参考资料后执行匹配场景。
-- **需求模板**：按需使用 `templates/` 下的需求、方案、架构和验收模板。
+- **需求模板**：按需使用 `templates/` 下的需求、方案、架构和验收模板；已有工程增量改造使用 `templates/existing-project-change.md`。
 
 ## 硬规则
 
-1. 先确认题目目标、评分点、时间限制、允许硬件、场景、失败条件和安全约束，再给最终工程方案。
+1. 首次使用、新题目、环境变化或已有工程信息不足时，先执行首次使用门禁；主动收集板卡、系统、摄像头、相关接口和题目约束，再决定只做探测、进入方案验证或开始工程。
 2. 将信息标为“已确认事实”“用户选择”“合理假设”或“待验证”。不能把搜索结果、社区案例或猜测写成板卡事实。
 3. 以官方原理图和 IO 表确认物理连接；以当前 Linux 镜像、内核和设备树确认运行时接口。不要凭 `GPIOx_y` 臆测 Linux GPIO 数字，不要假设固定 `/dev/video*`、串口名或摄像头后端。
 4. 复用功能必须通过 Pinmux/设备树确认，不能声称同一个引脚同时承担多个功能。3.3 V、5 V 和 GND 引脚不是 GPIO。
@@ -39,22 +40,29 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 11. 题目、硬件、系统、API、版本或方案存在明显不确定性时，先按 `references/research-guidance.md` 形成研究卡；官方资料和原始题面用于确认事实，公开案例只用于补充路线和失败模式。
 12. 高影响项未确认前，只能输出比较、假设和最小验证，不把候选协议、引脚、坐标、模型、工程结构或安全动作当成最终实现。
 13. 区分 Codex 当前可访问的本地工作区和 VS Code Remote-SSH 连接的泰山派。若 Codex 没有远程终端权限，不得声称已经执行板端命令、读取板端日志或完成实板验证；应生成可复制命令，要求用户在 Remote-SSH 终端运行，并分析用户返回的输出或 JSON 证据。
+14. 门禁为“部分通过”或“阻塞”时，只交付需求卡、信息缺口、方案边界和最小探测。不得确定设备号、引脚、协议、坐标、模型、性能数字或生成完整工程；合理假设必须附用途、影响和验证方法。
 
 ## 工作流
+
+### 0. 执行首次使用门禁
+
+读取 `templates/first-use-gate.md`，建立“已确认事实、用户选择、合理假设、待验证项”四类台账。基础必查板卡身份、系统/内核/架构、Codex 的板端可访问性和本次目标；摄像头、UART、GPIO、执行机构或模型只在题目/测试涉及它们时进入对应探测。
+
+门禁结论只能是“通过、部分通过、阻塞”。部分通过只允许完成列出的最小验证；阻塞只输出缺口、低风险探测和需要用户确认的选择。用户只给陌生题面时，同时完成能从题面提取的需求卡，不等待所有信息齐全后才开始分析。
 
 ### 1. 建立题目约束卡
 
 读取 `templates/task-intake.md`，提取目标、评分点、验收方式、场景、目标外观、允许硬件、执行机构、通信、安全限制和信息缺口。信息不足时先输出缺口和可选假设，不直接生成最终协议或完整闭环代码。
 
-用户只请求一个低风险、范围明确的 API、命令、语法或单硬件测试时，读取 `templates/quick-check-intake.md`，只输出自包含的探测/验证代码、预期现象、失败排查和下一步，不启动完整方案矩阵。
+用户只请求一个低风险、范围明确的 API、命令、语法或单硬件测试时，读取 `templates/quick-check-intake.md`，完成轻量门禁后只输出自包含的探测/验证代码、预期现象、失败排查、证据保存和下一步，不启动完整方案矩阵。
 
 ### 2. 分类视觉任务
 
-将题目归入一个或多个任务类型，并读取匹配章节：静态测量、运动跟踪、视觉控制、空间盘点或传统识别。说明哪些观测量来自相机，哪些来自编码器/IMU/下位机，哪些只是控制目标。不要把“识别到目标”直接等同于“已经完成定位或控制”。
+将题目归入一个主类型和必要的次类型，并读取匹配章节：颜色/几何与传统识别、静态测量、结构化标记/格点/路径、运动跟踪、多目标盘点、视觉控制或混合题型。说明分类依据、相机观测量、外部观测量和最终输出。不要把“识别到目标”直接等同于“已经完成定位、测量、跟踪或控制”。
 
 ### 3. 选择方案并写出降级路线
 
-读取 `templates/solution-options.md`。只有存在真实取舍时才给出 2-3 个方案，否则给出一条推荐路线和被排除的路线。每个保留方案说明观测量、坐标系、标定、板端依赖、延迟、风险、降级方式、接口和最小验证。
+读取 `templates/solution-options.md`。只有存在真实取舍时才给出 2-3 个方案，否则给出一条推荐路线和被排除的路线。每个保留方案说明观测量、坐标系、标定/数据负担、板端依赖、最小验证、失败信号、降级方式和接口边界。
 
 默认顺序是：能用稳定颜色/几何/标定解决就不引入模型；需要类别语义或复杂外观时再评估 OpenCV DNN、RKNN 或其他运行时。缺少授权模型、数据集或目标板实测时，标记阻塞项。
 
@@ -66,7 +74,7 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 用户提供板端 JSON、日志或性能记录时，将其标为“当前用户环境的实测证据”；可以用来分析该环境和验证探针，但不能把其中的设备节点、分辨率、协议或性能数字推广为所有泰山派用户的默认配置。
 
-至少完成系统/内核/架构识别、摄像头设备和后端检查、OpenCV 导入或编译检查、串口/GPIO 能力检查，以及目标模型运行时检查。工具不存在时给出替代检查，不伪造成功。
+先完成与当前任务有关的最小能力检查：系统/内核/架构和开发入口为基础项；图像任务检查摄像头与 OpenCV；涉及 UART/GPIO 时检查对应能力；只有使用用户已有模型的路线才检查目标模型运行时。工具不存在时给出替代检查，不伪造成功。
 
 若当前 Codex 只连接用户电脑而不能访问 VS Code 的远程终端，则把探针当作用户执行的验证工件：给出工作目录、完整命令、预期输出、退出码和保存方式；用户执行后返回文本、JSON、日志或截图，才能更新平台事实。
 
@@ -80,7 +88,7 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 遇到低帧率、误检、抖动、丢目标、串口积压、模型失败或重启时，先给证据、可能瓶颈、低风险优化和回归测试，不直接改动高影响坐标、协议或安全参数。
 
-用户提供已有工程时，先读取 `references/existing-project-integration.md`，建立现状清单并保留已确认接口；需要记录“电脑看到、程序输出、板端执行、评分达成”的证据时，使用 `templates/debug-evidence.md`。
+用户提供已有工程时，先读取 `references/existing-project-integration.md` 和 `templates/existing-project-change.md`，读取相关源码/配置、建立基线并保留已确认接口；材料不足时只索取最小材料，不生成平行工程。需要记录“电脑看到、程序输出、板端执行、评分达成”的证据时，使用 `templates/debug-evidence.md`。
 
 ### 7. 形成可交付工程和验收报告
 
@@ -90,15 +98,13 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 涉及模型时，读取 `templates/yolo-data-and-training.md`；涉及性能数字时，读取 `templates/performance-report.md`。
 
-端到端参考项目可从 `examples/vision-uart-baseline/` 开始，但必须先按 `README.md` 分阶段验证摄像头、算法和 UART；示例 JSON Lines 不是用户已确认的比赛协议。
-
 ## 回答格式
 
-涉及新题目或复杂改动时，按以下顺序回答：已确认约束与待确认项；视觉任务分类和推荐路线；坐标、标定、状态和接口约定；最小验证步骤；工程结构与代码；预期现象、失败排查和降级方案；验收指标与仍待实测内容。
+涉及新题目或复杂改动时，按以下顺序回答：门禁结论；四类信息台账；视觉任务分类和推荐路线；坐标、标定、状态和接口边界；最小验证、预期证据与失败判据；降级路线；门禁通过后才提供工程结构与代码；验收指标与仍待实测内容。
 
 用户只问一个低风险 API、命令或语法问题时，缩小范围，只给必要的探测/验证代码和边界，不强行启动完整方案选择流程。
 
-修改 Skill、模板或参考资料后，按 `references/validation-scenarios.md` 执行至少一个匹配场景；若出现信息不足时擅自定协议、已有工程未先阅读、无数据集却声称模型可用或无实测却声称达标，不能发布该版本。
+修改首次门禁、题型选择或核心工作流后，按 `references/validation-scenarios.md` 执行 R1、R2、R3；其他修改至少执行一个匹配场景。若出现信息不足时擅自定协议、已有工程未先阅读、无数据集却声称模型可用或无实测却声称达标，不能发布该版本。
 
 ## 安全与发布边界
 
