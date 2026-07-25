@@ -96,3 +96,14 @@ Skill 面向公开使用者，目标是帮助使用泰山派 RK3566 参加电赛
 6. 用题目指标记录时间、误差、帧率、丢失率和降级行为。
 
 不绑定某个用户的摄像头、镜像、串口协议、下位机、模型或固定题目。
+
+## 7. YOLO / RKNN 路线资料与实板案例
+
+- 用户提供的社区部署参考（记录为路线来源，非通用板端事实）：
+  - https://blog.csdn.net/weixin_62656772/article/details/139309244
+  - https://blog.csdn.net/c858845275/article/details/146274652
+  - https://zhangkeliang0627.github.io/2026/02/22/%E5%9F%BA%E4%BA%8Erk3566%E7%9A%84%E6%B3%B0%E5%B1%B1%E6%B4%BE%E7%9A%84YOLOv8%E8%87%AA%E5%AE%9A%E4%B9%89%E6%A8%A1%E5%9E%8B%E9%83%A8%E7%BD%B2/README/
+- Rockchip 优化 YOLOv8 导出说明：https://github.com/airockchip/ultralytics_yolov8/blob/main/RKOPT_README.zh-CN.md
+- RKNN Model Zoo YOLOv8 示例：https://github.com/airockchip/rknn_model_zoo/tree/main/examples/yolov8
+- RKNN Model Zoo 性能基准：https://github.com/airockchip/rknn_model_zoo#model-performance-benchmarkfps
+- 用户提供的一次 RK3566 实板过程已脱敏沉淀为：[YOLOv8 RKNN 实板验证案例](yolo-rknn-validated-case.md)。案例明确记录了“用户参考定位 Runtime 问题 -> Rockchip 官方优化导出改善部署性能”的决策链；其中的版本、输入尺寸、帧率和模型效果只用于说明验证方法，不作为通用板端事实或性能承诺。

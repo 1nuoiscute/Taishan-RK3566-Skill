@@ -96,7 +96,7 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 按 `references/validation-and-evidence.md` 区分采集帧率、视觉处理帧率、端到端延迟、误差、控制发布频率、连续运行时间和异常次数。没有目标板数据就保留“待实测”。
 
-涉及模型时，读取 `templates/yolo-data-and-training.md`；涉及性能数字时，读取 `templates/performance-report.md`。
+涉及模型时，读取 `templates/yolo-data-and-training.md`；已有 YOLO / RKNN 部署、量化或实板性能问题时，同时读取 `references/yolo-rknn-validated-case.md`。涉及性能数字时，读取 `templates/performance-report.md`。
 
 ## 回答格式
 

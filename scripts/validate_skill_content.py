@@ -78,7 +78,7 @@ def main() -> int:
         if outcome not in gate:
             errors.append(f"first-use gate lacks outcome: {outcome}")
 
-    for scenario_id in ("R1", "R2", "R3"):
+    for scenario_id in ("R1", "R2", "R3", "R4"):
         if scenario_id not in scenarios:
             errors.append(f"validation scenarios lack {scenario_id}")
     if "scripts/probe_camera.py" not in scenarios:
@@ -102,6 +102,10 @@ def main() -> int:
 
     if "examples/vision-uart-baseline" in skill:
         errors.append("SKILL.md references the nonexistent UART end-to-end example")
+    if "references/yolo-rknn-validated-case.md" not in skill:
+        errors.append("SKILL.md does not route to the YOLO/RKNN validated case")
+    if "yolo-rknn-validated-case.md" not in read("templates/yolo-data-and-training.md"):
+        errors.append("YOLO template does not link the validated RKNN case")
     if "$taishan-rk3566" not in interface or "首次门禁" not in interface:
         errors.append("agents/openai.yaml default prompt is stale")
 
