@@ -5,11 +5,13 @@
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
 ![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
-![Version](https://img.shields.io/badge/Version-v1.1.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-v1.2.0-blue.svg)
 
-当前公开版本：**v1.1.0**
+当前公开版本：**v1.2.0**
 
 v1.1.0 重点完善陌生用户的首次使用门禁、题型与方案选择、最小验证、已有工程增量接入和发布前回归。它验证的是 Skill 能否在证据不足时守住工程边界，不代表所有题型、摄像头、接口或性能已经完成通用实板验证。
+
+v1.2.0 增加了一次脱敏的 RK3566 YOLOv8 RKNN 实板验证案例：覆盖 Rockchip 优化导出、静态图到摄像头的分阶段验证、输入维度问题、量化/原模型对照，以及数据集泄漏和泛化不足的分诊。它提供的是可复用验证方法，不把该案例的模型、摄像头或性能数字泛化为默认配置。
 
 它帮助使用立创·泰山派 RK3566 参加电赛视觉类题目，围绕“题目约束、板端能力、视觉方案、通信边界和验收证据”组织整个开发过程。
 
