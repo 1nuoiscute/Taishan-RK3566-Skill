@@ -13,15 +13,15 @@
 ![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
 ![Claude Code Skill](https://img.shields.io/badge/ClaudeCode-Skill-green.svg)
 ![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
-![Version](https://img.shields.io/badge/Version-v1.3.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-v1.3.1-blue.svg)
 
 ---
 
-当前公开版本：**v1.3.0**
+当前公开版本：**v1.3.1**
 
 <details>
-<summary><b>v1.3.0</b></summary>
-在保留 Codex 标准根目录安装结构的基础上新增 Claude Code 支持。两个平台共享 `references/`、`templates/` 和 `scripts/`，并通过同一组内容、路径和行为回归约束。
+<summary><b>v1.3.1</b></summary>
+整理 1.3.0 的安装说明：Codex 直接使用仓库根目录的 Skill；Claude Code 使用单独入口，并携带同一套参考资料、模板和探针脚本。内容没有新增硬件承诺。
 </details>
 
 <details>
@@ -72,14 +72,14 @@ Taishan Skill 的作用，就是把这些问题变成可检查、可验证、可
 
 ## 快速开始
 
-选择你的 AI 平台：
+点开下方的平台名称，查看对应的安装方式：
 
 <details>
-<summary><b>Codex CLI</b></summary>
+<summary><b>Codex</b></summary>
 
 ```text
 请使用 $skill-installer 从 GitHub 仓库 1nuoiscute/taishan-rk3566-skill
-的根目录（path 为 .）安装 Skill，安装名使用 taishan-rk3566
+安装仓库根目录中的 taishan-rk3566 Skill。
 ```
 
 安装后在 Codex 中调用：
@@ -203,7 +203,7 @@ Skill 会把“已在板端执行的事实”和“待验证的假设”分开�
 
 ```text
 Taishan-RK3566-Skill/
-├── SKILL.md               # Codex CLI 入口
+├── SKILL.md               # Codex 入口
 ├── claude/SKILL.md        # Claude Code 入口
 ├── references/            # 板端运行时、视觉任务、工程架构、调试、验证等参考文档
 ├── templates/             # 门禁、题目需求、方案矩阵、串口协议、验收等模板
@@ -212,7 +212,7 @@ Taishan-RK3566-Skill/
 └── README.md
 ```
 
-`references/`、`templates/`、`scripts/` 为两平台共享。
+`references/`、`templates/`、`scripts/` 是两个版本共用的资料、模板和探针脚本。
 
 ## 工程边界
 
