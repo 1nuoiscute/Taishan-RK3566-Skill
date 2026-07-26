@@ -9,20 +9,20 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 ## 资料导航
 
-只在需要时读取相关资料，避免一次加载全部参考文档。
+只在需要时读取相关资料，避免一次加载全部参考文档。以下路径均相对于安装后的 Skill 目录。
 
-- **资料和来源边界**：读取 [source-index.md](references/source-index.md)。区分官方硬件资料、官方 Wiki 的“共建”案例、竞赛题目和待验证经验。
-- **题目索引和陌生题**：读取 [nuedc-topic-coverage.md](references/nuedc-topic-coverage.md)。先匹配视觉模式，再处理陌生题；不要强套历史题。
-- **研究和来源分级**：读取 [research-guidance.md](references/research-guidance.md)。题目规则、硬件、版本、API 或路线存在不确定性时使用。
-- **板端环境发现**：读取 [board-and-runtime.md](references/board-and-runtime.md)。适用于 VS Code Remote-SSH 直连、摄像头、GPIO、UART、OpenCV 和模型运行时检查。
+- **资料和来源边界**：读取 `references/source-index.md`。区分官方硬件资料、官方 Wiki 的“共建”案例、竞赛题目和待验证经验。
+- **题目索引和陌生题**：读取 `references/nuedc-topic-coverage.md`。先匹配视觉模式，再处理陌生题；不要强套历史题。
+- **研究和来源分级**：读取 `references/research-guidance.md`。题目规则、硬件、版本、API 或路线存在不确定性时使用。
+- **板端环境发现**：读取 `references/board-and-runtime.md`。适用于 VS Code Remote-SSH 直连、摄像头、GPIO、UART、OpenCV 和模型运行时检查。
 - **真实基线探测**：运行 `scripts/run_baseline.sh`，或按需运行 `scripts/probe_*.py` 与 `scripts/probe_system.sh`；保存 JSON、stderr 和命令版本后再称为“实板基线”。
 - **首次使用门禁**：读取 `templates/first-use-gate.md`。首次用户、新题目、环境变化或来源不明的已有工程都先使用。
-- **视觉任务分类**：读取 [vision-task-archetypes.md](references/vision-task-archetypes.md)。题目涉及测量、跟踪、瞄准、空间盘点或其他视觉任务时，只加载匹配章节。
-- **工程架构**：读取 [architecture-patterns.md](references/architecture-patterns.md)。方案确认后确定模块、状态和可替换点。
-- **调试顺序**：读取 [debugging-playbook.md](references/debugging-playbook.md)。出现采集、算法、模型、通信、闭环或性能问题时使用。
-- **已有工程接入**：读取 [existing-project-integration.md](references/existing-project-integration.md)。用户提供代码、协议、接线或运行工程时先使用。
-- **验证和证据**：读取 [validation-and-evidence.md](references/validation-and-evidence.md)。需要性能、误差、闭环或验收结论时使用。
-- **发布前回归**：读取 [validation-scenarios.md](references/validation-scenarios.md)。修改 Skill、模板或参考资料后执行匹配场景。
+- **视觉任务分类**：读取 `references/vision-task-archetypes.md`。题目涉及测量、跟踪、瞄准、空间盘点或其他视觉任务时，只加载匹配章节。
+- **工程架构**：读取 `references/architecture-patterns.md`。方案确认后确定模块、状态和可替换点。
+- **调试顺序**：读取 `references/debugging-playbook.md`。出现采集、算法、模型、通信、闭环或性能问题时使用。
+- **已有工程接入**：读取 `references/existing-project-integration.md`。用户提供代码、协议、接线或运行工程时先使用。
+- **验证和证据**：读取 `references/validation-and-evidence.md`。需要性能、误差、闭环或验收结论时使用。
+- **发布前回归**：读取 `references/validation-scenarios.md`。修改 Skill、模板或参考资料后执行匹配场景。
 - **需求模板**：按需使用 `templates/` 下的需求、方案、架构和验收模板；已有工程增量改造使用 `templates/existing-project-change.md`。
 
 ## 硬规则
@@ -39,14 +39,14 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 10. 生成工程时只创建有真实职责的文件。默认从单一入口和最小目录开始；只有参数复用、模块边界、独立风险或测试需要时才拆分文件。板端路径使用项目相对路径，不依赖用户电脑绝对路径。
 11. 题目、硬件、系统、API、版本或方案存在明显不确定性时，先按 `references/research-guidance.md` 形成研究卡；官方资料和原始题面用于确认事实，公开案例只用于补充路线和失败模式。
 12. 高影响项未确认前，只能输出比较、假设和最小验证，不把候选协议、引脚、坐标、模型、工程结构或安全动作当成最终实现。
-13. 区分 Codex 当前可访问的本地工作区和 VS Code Remote-SSH 连接的泰山派。若 Codex 没有远程终端权限，不得声称已经执行板端命令、读取板端日志或完成实板验证；应生成可复制命令，要求用户在 Remote-SSH 终端运行，并分析用户返回的输出或 JSON 证据。
+13. 区分 Claude Code 当前可访问的本地工作区和 VS Code Remote-SSH 连接的泰山派。若 Claude Code 没有远程终端权限，不得声称已经执行板端命令、读取板端日志或完成实板验证；应生成可复制命令，要求用户在 Remote-SSH 终端运行，并分析用户返回的输出或 JSON 证据。
 14. 门禁为“部分通过”或“阻塞”时，只交付需求卡、信息缺口、方案边界和最小探测。不得确定设备号、引脚、协议、坐标、模型、性能数字或生成完整工程；合理假设必须附用途、影响和验证方法。
 
 ## 工作流
 
 ### 0. 执行首次使用门禁
 
-读取 `templates/first-use-gate.md`，建立“已确认事实、用户选择、合理假设、待验证项”四类台账。基础必查板卡身份、系统/内核/架构、Codex 的板端可访问性和本次目标；摄像头、UART、GPIO、执行机构或模型只在题目/测试涉及它们时进入对应探测。
+读取 `templates/first-use-gate.md`，建立“已确认事实、用户选择、合理假设、待验证项”四类台账。基础必查板卡身份、系统/内核/架构、Claude Code 的板端可访问性和本次目标；摄像头、UART、GPIO、执行机构或模型只在题目/测试涉及它们时进入对应探测。
 
 门禁结论只能是“通过、部分通过、阻塞”。部分通过只允许完成列出的最小验证；阻塞只输出缺口、低风险探测和需要用户确认的选择。用户只给陌生题面时，同时完成能从题面提取的需求卡，不等待所有信息齐全后才开始分析。
 
@@ -76,7 +76,7 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 
 先完成与当前任务有关的最小能力检查：系统/内核/架构和开发入口为基础项；图像任务检查摄像头与 OpenCV；涉及 UART/GPIO 时检查对应能力；只有使用用户已有模型的路线才检查目标模型运行时。工具不存在时给出替代检查，不伪造成功。
 
-Codex 可以直接在板端终端执行命令时，优先运行相关探针；若只能连接用户电脑而不能访问 VS Code 的远程终端，则把探针当作用户执行的验证工件：给出工作目录、完整命令、预期输出、退出码和保存方式；用户执行后返回文本、JSON、日志或截图，才能更新平台事实。
+Claude Code 可以直接在板端终端执行命令时，优先运行相关探针；若只能连接用户电脑而不能访问 VS Code 的远程终端，则把探针当作用户执行的验证工件：给出工作目录、完整命令、预期输出、退出码和保存方式；用户执行后返回文本、JSON、日志或截图，才能更新平台事实。
 
 ### 5. 先交付最小验证
 
