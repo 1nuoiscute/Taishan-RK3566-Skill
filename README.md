@@ -1,21 +1,46 @@
 # 泰山派 RK3566 电赛视觉 Skill
 
-> 面向电赛视觉的 RK3566 Linux 工程验证型 Codex Skill。
+> 面向电赛视觉的 RK3566 Linux 工程验证型 Skill，支持 Codex 与 Claude Code。
+
+---
+
+![English](https://img.shields.io/badge/English-暂不支持-grey?style=for-the-badge)
+[![快速安装](https://img.shields.io/badge/快速安装-点击查看-blue?style=for-the-badge)](#快速开始)
+
+---
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
+![Claude Code Skill](https://img.shields.io/badge/ClaudeCode-Skill-green.svg)
 ![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
-![Version](https://img.shields.io/badge/Version-v1.2.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-v1.3.0-blue.svg)
 
-当前公开版本：**v1.2.0**
+---
 
-v1.1.0 重点完善陌生用户的首次使用门禁、题型与方案选择、最小验证、已有工程增量接入和发布前回归。它验证的是 Skill 能否在证据不足时守住工程边界，不代表所有题型、摄像头、接口或性能已经完成通用实板验证。
+当前公开版本：**v1.3.0**
 
-v1.2.0 增加了一次脱敏的 RK3566 YOLOv8 RKNN 实板验证案例：覆盖 Rockchip 优化导出、静态图到摄像头的分阶段验证、输入维度问题、量化/原模型对照，以及数据集泄漏和泛化不足的分诊。它提供的是可复用验证方法，不把该案例的模型、摄像头或性能数字泛化为默认配置。
+<details>
+<summary><b>v1.3.0</b></summary>
+在保留 Codex 标准根目录安装结构的基础上新增 Claude Code 支持。两个平台共享 `references/`、`templates/` 和 `scripts/`，并通过同一组内容、路径和行为回归约束。
+</details>
+
+<details>
+<summary><b>v1.2.0</b></summary>
+增加了一次脱敏的 RK3566 YOLOv8 RKNN 实板验证案例：覆盖 Rockchip 优化导出、静态图到摄像头的分阶段验证、输入维度问题、量化/原模型对照，以及数据集泄漏和泛化不足的分诊。它提供的是可复用验证方法，不把该案例的模型、摄像头或性能数字泛化为默认配置。
+</details>
+
+<details>
+<summary><b>v1.1.0</b></summary>
+重点完善陌生用户的首次使用门禁、题型与方案选择、最小验证、已有工程增量接入和发布前回归。它验证的是 Skill 能否在证据不足时守住工程边界，不代表所有题型、摄像头、接口或性能已经完成通用实板验证。
+</details>
+
+---
 
 它帮助使用立创·泰山派 RK3566 参加电赛视觉类题目，围绕“题目约束、板端能力、视觉方案、通信边界和验收证据”组织整个开发过程。
 
 ![泰山派 RK3566](https://img.1nuo.me/blog/2026/07/21/20260721235036347.webp)
+
+---
 
 ## 这个 Skill 解决什么问题
 
@@ -47,17 +72,17 @@ Taishan Skill 的作用，就是把这些问题变成可检查、可验证、可
 
 ## 快速开始
 
-### 0. 安装 Skill
+选择你的 AI 平台：
 
-在 Codex 中输入：
+<details>
+<summary><b>Codex CLI</b></summary>
 
 ```text
-请使用 $skill-installer 从 GitHub 仓库 1nuoiscute/taishan-rk3566-skill 安装 taishan-rk3566 Skill
+请使用 $skill-installer 从 GitHub 仓库 1nuoiscute/taishan-rk3566-skill
+的根目录（path 为 .）安装 Skill，安装名使用 taishan-rk3566
 ```
 
-### 1. 在 Codex 中调用
-
-可以直接提出：
+安装后在 Codex 中调用：
 
 ```text
 使用 $taishan-rk3566 分析这道电赛视觉题，
@@ -72,9 +97,48 @@ Taishan Skill 的作用，就是把这些问题变成可检查、可验证、可
 不要直接写完整工程。
 ```
 
-首次使用时，Skill 会优先确认：
+对应文件：`SKILL.md`
+</details>
 
-- 当前板卡、系统、内核、架构和 Codex 能否访问板端；
+<details>
+<summary><b>Claude Code</b></summary>
+
+```bash
+# 克隆仓库
+git clone https://github.com/1nuoiscute/Taishan-RK3566-Skill.git
+
+# 安装为个人 Skill（所有项目可用）
+mkdir -p ~/.claude/skills/taishan-rk3566
+cp Taishan-RK3566-Skill/claude/SKILL.md ~/.claude/skills/taishan-rk3566/SKILL.md
+cp -r Taishan-RK3566-Skill/references ~/.claude/skills/taishan-rk3566/
+cp -r Taishan-RK3566-Skill/templates ~/.claude/skills/taishan-rk3566/
+cp -r Taishan-RK3566-Skill/scripts ~/.claude/skills/taishan-rk3566/
+```
+
+或安装为项目 Skill：
+
+```bash
+mkdir -p .claude/skills/taishan-rk3566
+cp path/to/Taishan-RK3566-Skill/claude/SKILL.md .claude/skills/taishan-rk3566/SKILL.md
+cp -r path/to/Taishan-RK3566-Skill/references .claude/skills/taishan-rk3566/
+cp -r path/to/Taishan-RK3566-Skill/templates .claude/skills/taishan-rk3566/
+cp -r path/to/Taishan-RK3566-Skill/scripts .claude/skills/taishan-rk3566/
+```
+
+安装后在 Claude Code 中调用：
+
+```text
+/taishan-rk3566 分析这道电赛视觉题，先完成首次使用检查和题目约束卡
+```
+
+对应文件：`claude/SKILL.md`
+</details>
+
+---
+
+### 1. 首次使用时，Skill 会优先确认：
+
+- 当前板卡、系统、内核、架构和 AI 能否访问板端；
 - 摄像头设备、格式和实际采集能力；
 - 题目实际涉及的 UART、GPIO、下位机或模型运行时条件；
 - 题目中的视觉目标、误差、时限和执行机构边界。
@@ -108,7 +172,7 @@ python3 scripts/probe_camera.py --json --frames 30
 
 ### 3. 把证据交给 Skill
 
-将板端生成的 JSON、文本输出或日志交给 Codex，并说明：
+将板端生成的 JSON、文本输出或日志交给 AI，并说明：
 
 ```text
 这是我的泰山派板端探针结果。
@@ -137,11 +201,18 @@ Skill 会把“已在板端执行的事实”和“待验证的假设”分开�
 
 ## 目录结构
 
-- `SKILL.md`：触发描述、首次使用门禁和核心工作流；
-- `references/`：板端运行时、视觉任务、工程架构、调试、研究资料和验证方法；
-- `templates/`：首次门禁、题目需求、快速验证、方案矩阵、已有工程增量、串口协议、工程结构、性能和验收模板；
-- `scripts/`：系统、摄像头、UART、GPIO、RKNN 探针，以及统一保存证据的 `run_baseline.sh`；
-- `agents/openai.yaml`：Skill 在 Codex 中的界面信息。
+```text
+Taishan-RK3566-Skill/
+├── SKILL.md               # Codex CLI 入口
+├── claude/SKILL.md        # Claude Code 入口
+├── references/            # 板端运行时、视觉任务、工程架构、调试、验证等参考文档
+├── templates/             # 门禁、题目需求、方案矩阵、串口协议、验收等模板
+├── scripts/               # 系统、摄像头、UART、GPIO、RKNN 探针
+├── agents/openai.yaml     # Codex 界面配置
+└── README.md
+```
+
+`references/`、`templates/`、`scripts/` 为两平台共享。
 
 ## 工程边界
 
@@ -165,11 +236,11 @@ Skill 会把“已在板端执行的事实”和“待验证的假设”分开�
 
 这些结果用于帮助 Skill 做出更贴近真实板端的判断。具体设备路径和性能参数始终以用户自己的板端输出为准。
 
-## Remote-SSH 与 Codex 的边界
+## Remote-SSH 与 AI 的边界
 
-VS Code Remote-SSH 可以让用户在 VS Code 中操作泰山派板端 Linux，但 Codex 是否能直接执行远程终端命令，取决于当前运行环境。
+VS Code Remote-SSH 可以让用户在 VS Code 中操作泰山派板端 Linux，但 AI 是否能直接执行远程终端命令，取决于当前运行环境。
 
-如果 Codex 只能访问本地工作区，用户需要在 VS Code 的 Remote-SSH 终端执行 `scripts/` 下的探针，再把输出或 JSON 证据交给 Codex。Skill 不会把尚未执行的命令描述成板端验证结果。
+如果 AI 只能访问本地工作区，用户需要在 VS Code 的 Remote-SSH 终端执行 `scripts/` 下的探针，再把输出或 JSON 证据交给 AI。Skill 不会把尚未执行的命令描述成板端验证结果。
 
 ## 参考资料
 
@@ -186,6 +257,10 @@ VS Code Remote-SSH 可以让用户在 VS Code 中操作泰山派板端 Linux，�
 - `v1.x.0`：增加新的题型方法、探针或工程能力；
 - `v2.0.0`：出现不兼容的 Skill 工作流或接口变化。
 
+---
+
 当前基线版本记录在仓库根目录的 `VERSION` 文件中。每次发布时同步更新该文件、README 版本标识和 Git tag。
+
+---
 
 原始原理图、竞赛题目 PDF、个人工程和未授权模型不直接打包到公开 Skill；来源和适用范围记录在 `references/source-index.md`。

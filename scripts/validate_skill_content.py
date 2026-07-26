@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 REQUIRED_FILES = (
     "VERSION",
     "SKILL.md",
+    "claude/SKILL.md",
     "README.md",
     "agents/openai.yaml",
     "references/validation-scenarios.md",
@@ -25,6 +26,43 @@ REQUIRED_FILES = (
 )
 STATE_LABELS = ("已确认事实", "用户选择", "合理假设", "待验证")
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+PLATFORM_SKILLS = ("SKILL.md", "claude/SKILL.md")
+SHARED_ROUTES = (
+    "references/source-index.md",
+    "references/nuedc-topic-coverage.md",
+    "references/research-guidance.md",
+    "references/board-and-runtime.md",
+    "references/vision-task-archetypes.md",
+    "references/architecture-patterns.md",
+    "references/debugging-playbook.md",
+    "references/existing-project-integration.md",
+    "references/validation-and-evidence.md",
+    "references/validation-scenarios.md",
+    "references/yolo-rknn-validated-case.md",
+    "templates/first-use-gate.md",
+    "templates/task-intake.md",
+    "templates/quick-check-intake.md",
+    "templates/solution-options.md",
+    "templates/existing-project-change.md",
+    "templates/serial-protocol-decision.md",
+    "templates/project-architecture.md",
+    "templates/acceptance-checklist.md",
+    "templates/debug-evidence.md",
+    "templates/yolo-data-and-training.md",
+    "templates/performance-report.md",
+)
+BEHAVIOR_INVARIANTS = (
+    "首次使用门禁",
+    "部分通过",
+    "合理假设",
+    "最小验证",
+    "降级路线",
+    "不直接生成完整闭环代码",
+    "R1、R2、R3",
+    "不能发布该版本",
+    "证据保存",
+    "回滚办法",
+)
 
 
 def read(relative_path: str) -> str:
@@ -49,7 +87,11 @@ def main() -> int:
     if f"v{version}" not in readme:
         errors.append("README.md does not contain the VERSION value")
 
-    skill = read("SKILL.md")
+    platform_skills = {
+        relative_path: read(relative_path) for relative_path in PLATFORM_SKILLS
+    }
+    skill = platform_skills["SKILL.md"]
+    claude_skill = platform_skills["claude/SKILL.md"]
     gate = read("templates/first-use-gate.md")
     task_intake = read("templates/task-intake.md")
     quick_intake = read("templates/quick-check-intake.md")
@@ -61,7 +103,7 @@ def main() -> int:
 
     for label in STATE_LABELS:
         for relative_path, content in (
-            ("SKILL.md", skill),
+            *platform_skills.items(),
             ("templates/first-use-gate.md", gate),
             ("templates/task-intake.md", task_intake),
             ("templates/quick-check-intake.md", quick_intake),
@@ -92,23 +134,28 @@ def main() -> int:
         if phrase not in topic_coverage:
             errors.append(f"topic coverage lacks decision element: {phrase}")
 
-    for required_reference in (
-        "templates/first-use-gate.md",
-        "templates/existing-project-change.md",
-        "references/validation-scenarios.md",
-    ):
-        if required_reference not in skill:
-            errors.append(f"SKILL.md does not route to: {required_reference}")
+    for relative_path, content in platform_skills.items():
+        for required_reference in SHARED_ROUTES:
+            if required_reference not in content:
+                errors.append(f"{relative_path} does not route to: {required_reference}")
+            if not (ROOT / required_reference).is_file():
+                errors.append(f"{relative_path} routes to missing file: {required_reference}")
+        for invariant in BEHAVIOR_INVARIANTS:
+            if invariant not in content:
+                errors.append(f"{relative_path} lacks behavior invariant: {invariant}")
 
     if "examples/vision-uart-baseline" in skill:
         errors.append("SKILL.md references the nonexistent UART end-to-end example")
-    if "references/yolo-rknn-validated-case.md" not in skill:
-        errors.append("SKILL.md does not route to the YOLO/RKNN validated case")
+    if "Codex" not in skill:
+        errors.append("SKILL.md does not identify the Codex platform")
+    if "Claude Code" not in claude_skill:
+        errors.append("claude/SKILL.md does not identify the Claude Code platform")
+    if "../references/" in claude_skill or "../templates/" in claude_skill:
+        errors.append("claude/SKILL.md assumes repository layout instead of installed layout")
     if "yolo-rknn-validated-case.md" not in read("templates/yolo-data-and-training.md"):
         errors.append("YOLO template does not link the validated RKNN case")
     if "$taishan-rk3566" not in interface or "首次门禁" not in interface:
         errors.append("agents/openai.yaml default prompt is stale")
-
     for markdown_file in ROOT.rglob("*.md"):
         content = markdown_file.read_text(encoding="utf-8")
         for raw_target in LINK_PATTERN.findall(content):
