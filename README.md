@@ -21,6 +21,7 @@
 
 <details>
 <summary><b>v1.3.1</b></summary>
+1.3.0：新增Claude Codex支持。
 整理 1.3.0 的安装说明：Codex 直接使用仓库根目录的 Skill；Claude Code 使用单独入口，并携带同一套参考资料、模板和探针脚本。内容没有新增硬件承诺。
 </details>
 
