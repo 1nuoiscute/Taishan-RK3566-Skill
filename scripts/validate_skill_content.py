@@ -17,12 +17,15 @@ REQUIRED_FILES = (
     "agents/openai.yaml",
     "references/validation-scenarios.md",
     "references/nuedc-topic-coverage.md",
+    "references/robust-vision-control.md",
+    "references/live-debugging-and-deployment.md",
     "templates/first-use-gate.md",
     "templates/task-intake.md",
     "templates/quick-check-intake.md",
     "templates/solution-options.md",
     "templates/existing-project-change.md",
     "templates/acceptance-checklist.md",
+    "templates/perception-control-tuning.md",
 )
 STATE_LABELS = ("已确认事实", "用户选择", "合理假设", "待验证")
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -39,6 +42,8 @@ SHARED_ROUTES = (
     "references/validation-and-evidence.md",
     "references/validation-scenarios.md",
     "references/yolo-rknn-validated-case.md",
+    "references/robust-vision-control.md",
+    "references/live-debugging-and-deployment.md",
     "templates/first-use-gate.md",
     "templates/task-intake.md",
     "templates/quick-check-intake.md",
@@ -50,6 +55,7 @@ SHARED_ROUTES = (
     "templates/debug-evidence.md",
     "templates/yolo-data-and-training.md",
     "templates/performance-report.md",
+    "templates/perception-control-tuning.md",
 )
 BEHAVIOR_INVARIANTS = (
     "首次使用门禁",
@@ -62,6 +68,7 @@ BEHAVIOR_INVARIANTS = (
     "不能发布该版本",
     "证据保存",
     "回滚办法",
+    "过期",
 )
 
 
@@ -80,8 +87,10 @@ def main() -> int:
         return finish(errors)
 
     version = read("VERSION").strip()
-    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
-        errors.append(f"VERSION is not semantic x.y.z: {version!r}")
+    if not re.fullmatch(
+        r"\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?", version
+    ):
+        errors.append(f"VERSION is not semantic x.y.z with optional prerelease: {version!r}")
 
     readme = read("README.md")
     if f"v{version}" not in readme:
@@ -120,7 +129,7 @@ def main() -> int:
         if outcome not in gate:
             errors.append(f"first-use gate lacks outcome: {outcome}")
 
-    for scenario_id in ("R1", "R2", "R3", "R4"):
+    for scenario_id in ("R1", "R2", "R3", "R4", "R5", "R6", "R7"):
         if scenario_id not in scenarios:
             errors.append(f"validation scenarios lack {scenario_id}")
     if "scripts/probe_camera.py" not in scenarios:
@@ -154,6 +163,34 @@ def main() -> int:
         errors.append("claude/SKILL.md assumes repository layout instead of installed layout")
     if "yolo-rknn-validated-case.md" not in read("templates/yolo-data-and-training.md"):
         errors.append("YOLO template does not link the validated RKNN case")
+    robust = read("references/robust-vision-control.md")
+    tuning = read("templates/perception-control-tuning.md")
+    for phrase in (
+        "全帧基线",
+        "重捕获",
+        "实际采样时间",
+        "抗饱和",
+        "不得“继续上一帧动作”",
+        "固定张数",
+    ):
+        if phrase not in robust:
+            errors.append(f"robust vision/control reference lacks: {phrase}")
+    for phrase in ("唯一变量", "回滚", "观测新鲜度", "仍待目标板实测"):
+        if phrase not in tuning:
+            errors.append(f"perception/control tuning template lacks: {phrase}")
+    if "2026 年电赛视觉备赛突击清单" not in read("references/source-index.md"):
+        errors.append("source index lacks the 2026 preparation checklist provenance")
+    live_debugging = read("references/live-debugging-and-deployment.md")
+    for phrase in (
+        "节点不存在不等于被占用",
+        "最新帧",
+        "串口发布频率",
+        "宽泛的 `pkill -f`",
+        "服务 active",
+        "软件零位",
+    ):
+        if phrase not in live_debugging:
+            errors.append(f"live debugging reference lacks: {phrase}")
     if "$taishan-rk3566" not in interface or "首次门禁" not in interface:
         errors.append("agents/openai.yaml default prompt is stale")
     for markdown_file in ROOT.rglob("*.md"):

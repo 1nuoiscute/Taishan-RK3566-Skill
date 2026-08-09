@@ -107,3 +107,11 @@ Skill 面向公开使用者，目标是帮助使用泰山派 RK3566 参加电赛
 - RKNN Model Zoo YOLOv8 示例：https://github.com/airockchip/rknn_model_zoo/tree/main/examples/yolov8
 - RKNN Model Zoo 性能基准：https://github.com/airockchip/rknn_model_zoo#model-performance-benchmarkfps
 - 用户提供的一次 RK3566 实板过程已脱敏沉淀为：[YOLOv8 RKNN 实板验证案例](yolo-rknn-validated-case.md)。案例明确记录了“用户参考定位 Runtime 问题 -> Rockchip 官方优化导出改善部署性能”的决策链；其中的版本、输入尺寸、帧率和模型效果只用于说明验证方法，不作为通用板端事实或性能承诺。
+
+## 8. 2026 备赛实践清单
+
+- 用户提供资料：《2026 年电赛视觉备赛突击清单》（PDF，2026-07）。
+- 来源等级：用户提供的备赛经验摘要，不是竞赛题面、泰山派官方资料或板端实测报告；原始 PDF 不打包进公开 Skill。
+- 可泛化主题：颜色/轮廓候选、ROI 性能优化、模型降级、相机曝光与白平衡、时序确认、目标丢失状态和 PID 调参。
+- 迁移边界：`find_blobs`、`merge=True`、IDE 拉阈值和 MaixCAM 运行方式属于其他平台实践；固定 2-3 组阈值、3000 张图片、连续 5 帧、丢失 5 帧或特定 PID 公式都不能作为泰山派默认参数。
+- 沉淀结果：[鲁棒识别与闭环调优](robust-vision-control.md)。该参考把清单内容改写为基于当前题目、当前镜像、实际帧率和安全契约的验证流程。
