@@ -13,11 +13,21 @@
 ![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
 ![Claude Code Skill](https://img.shields.io/badge/ClaudeCode-Skill-green.svg)
 ![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
-![Version](https://img.shields.io/badge/Version-v1.3.1-blue.svg)
+![Version](https://img.shields.io/badge/Version-v1.4.0-blue.svg)
 
 ---
 
-当前公开版本：**v1.3.1**
+当前公开版本：**v1.4.0**
+
+<details open>
+<summary><b>v1.4.0</b></summary>
+新增鲁棒识别与闭环调优工作流，并基于真实现场联调与闭环审查对话补强摄像头分层诊断、VLC/录像延迟分解、协议与发布频率冻结、精确进程管理、网络切换回退、板端部署校验和启动控制状态机；修复摄像头探针 FPS 稳定条件永不通过及长时间缓存全部帧的问题，并加入无第三方依赖的回归测试。本版本已通过本地内容、语法和合成场景回归；泰山派实板链路仍需按具体项目验证。
+</details>
+
+<details>
+<summary><b>v1.4.0-beta.1（测试版）</b></summary>
+新增“鲁棒识别与闭环调优”工作流：把颜色/轮廓、相机工作点、动态 ROI、时序确认、模型降级和 PID/云台调参串成可回放、可回滚、带超时与安全状态的验证链路。新增调优记录模板和 R5 回归场景；不照搬 MaixCAM API，也不把固定阈值组、图片数、帧数、PID 增益或丢失动作当作泰山派默认参数。本测试版尚未执行完整发布回归或泰山派实板验证。
+</details>
 
 <details>
 <summary><b>v1.3.1</b></summary>
@@ -51,6 +61,10 @@
 - 电脑上能运行，板端却打不开摄像头或串口；
 - 物理引脚、GPIO 编号、设备树和 Linux 设备节点混在一起；
 - 视觉处理频率、控制发布频率和 UART 协议没有分层；
+- 阈值、动态 ROI、连续帧数和 PID 参数从其他平台或示例直接照抄；
+- 目标丢失后继续使用过期坐标，闭环没有明确超时和安全动作；
+- 摄像头节点不存在却被误判为占用，现场用宽泛进程清理破坏可用链路；
+- 图传、识别和协议参数一起修改，缺少当前可用版本与回滚点；
 - 方案还没有验证，就直接开始写完整工程；
 - 已有项目改动过大，出现难以定位的回归问题。
 
@@ -63,13 +77,17 @@ Taishan Skill 的作用，就是把这些问题变成可检查、可验证、可
   -> 赛题约束卡
   -> 视觉任务分类
   -> 传统视觉 / 测量 / 跟踪 / 模型方案比较
+  -> 相机工作点 / 观测契约 / 全帧基线
   -> 按需板端能力探测
-  -> 最小视觉验证
+  -> 最小视觉验证 / ROI 与时序回放
+  -> 现场联调 / 图传分层 / 协议冻结 / 可回滚部署
   -> 坐标、通信和执行闭环
   -> 性能与评分验收
 ```
 
 它参考 [MaixCAM-skill](https://github.com/LanHua01/MaixCAM-skill) 的工程方法，但不复制 MaixPy、MaixVision 或固定赛题代码。
+
+v1.4.0 参考用户提供的《2026 年电赛视觉备赛突击清单》，只吸收其中可泛化的视觉与控制方法。原始 PDF 不进入公开仓库，来源等级和迁移边界记录在 `references/source-index.md`。
 
 ## 快速开始
 
@@ -194,6 +212,7 @@ Skill 会把“已在板端执行的事实”和“待验证的假设”分开�
 - 静态目标定位与中心误差计算；
 - 运动目标跟踪和状态判断；
 - 视觉瞄准、云台控制和闭环执行；
+- 相机曝光/白平衡工作点、动态 ROI、时序确认和重捕获调优；
 - 空间盘点、货架、棋盘或多目标位置判断；
 - 传统 OpenCV 与现有模型运行时方案的选择；
 - 摄像头、UART、GPIO、MSPM0 和执行机构之间的职责划分。
@@ -207,7 +226,7 @@ Taishan-RK3566-Skill/
 ├── SKILL.md               # Codex 入口
 ├── claude/SKILL.md        # Claude Code 入口
 ├── references/            # 板端运行时、视觉任务、工程架构、调试、验证等参考文档
-├── templates/             # 门禁、题目需求、方案矩阵、串口协议、验收等模板
+├── templates/             # 门禁、题目需求、方案矩阵、感知/控制调优、验收等模板
 ├── scripts/               # 系统、摄像头、UART、GPIO、RKNN 探针
 ├── agents/openai.yaml     # Codex 界面配置
 └── README.md
@@ -221,6 +240,10 @@ Taishan-RK3566-Skill/
 - 不根据 40 针编号直接猜 Linux GPIO 数字；
 - 不在缺少板端证据时，把桌面电脑上的 FPS、OpenCV 行为或模型结果当作实测；
 - 不默认发送 UART 数据或申请 GPIO line；
+- 不把固定阈值组、数据量、连续帧数、PID 增益或丢失动作当作通用参数；
+- 不允许过期观测继续标为有效或驱动执行器；
+- 不把摄像头节点缺失直接判断为占用，不用宽泛进程清理替代分层诊断；
+- 不把“已上传”“服务 active”或单帧日志写成端到端可用；
 - 不把 MSPM0、云台、电机或安全控制的职责未经确认地转移到 RK3566；
 - 通过 Remote-SSH 工作时，明确区分 VS Code 界面、板端终端和 Codex 当前可访问的环境。
 

@@ -6,9 +6,14 @@ Examples:
     python3 scripts/probe_camera.py --json > camera-baseline.json
     python3 scripts/probe_camera.py --device /dev/video9 --backend v4l2 \
         --width 1280 --height 720 --fps 30 --fourcc MJPG --save-frame evidence.jpg
+    python3 scripts/probe_camera.py --stable-condition fps --stable-window 30 \
+        --stable-tolerance 5.0 --stable-timeout 60
 
 The probe does not modify camera controls or system configuration. It may open
 capture devices and optionally write one evidence frame to the requested path.
+
+When --stable-condition is set the probe reads frames continuously until the
+chosen metric stabilises within the tolerance window or the timeout expires.
 Exit codes: 0 = at least one frame read, 1 = no successful capture, 2 = bad
 arguments or internal probe error.
 """
@@ -24,7 +29,7 @@ import sys
 import time
 
 
-PROBE_VERSION = "0.1.0"
+PROBE_VERSION = "0.1.2"
 
 
 def parse_args():
@@ -39,6 +44,14 @@ def parse_args():
     parser.add_argument("--save-frame", help="Optional path for the first successful evidence frame.")
     parser.add_argument("--json", action="store_true", help="Print JSON output; this is already the default.")
     parser.add_argument("--text", action="store_true", help="Print a human-readable summary instead of JSON.")
+    parser.add_argument("--stable-condition", choices=("fps", "brightness", "framesize"),
+                        help="Enable stability monitoring using this metric.")
+    parser.add_argument("--stable-window", type=int, default=30,
+                        help="Consecutive frames required within tolerance (default: 30).")
+    parser.add_argument("--stable-tolerance", type=float, default=5.0,
+                        help="Tolerance percentage for the chosen metric (default: 5.0).")
+    parser.add_argument("--stable-timeout", type=float, default=60.0,
+                        help="Maximum seconds to wait for stability (default: 60.0).")
     return parser.parse_args()
 
 
@@ -110,6 +123,96 @@ def device_list(explicit_devices):
     return sorted(glob.glob("/dev/video*"))
 
 
+def monitor_until_stable(capture, first_frame, actual_width, actual_height, args,
+                         monotonic=time.monotonic, sleep=time.sleep):
+    condition = args.stable_condition
+    window_size = max(5, args.stable_window)
+    tolerance = max(0.1, args.stable_tolerance) / 100.0
+    timeout = max(1.0, args.stable_timeout)
+
+    history = []
+    start = monotonic()
+    previous_frame_at = start if first_frame is not None else None
+    total_read = 1 if first_frame is not None else 0
+    def metric(frame, width, height, captured_at):
+        if condition == "fps":
+            if previous_frame_at is None:
+                return None
+            interval = captured_at - previous_frame_at
+            return 1.0 / interval if interval > 0 else None
+        elif condition == "brightness":
+            try:
+                return float(frame.mean())
+            except Exception:
+                return None
+        elif condition == "framesize":
+            return float(width * height)
+        return None
+
+    if first_frame is not None:
+        val = metric(first_frame, actual_width, actual_height, start)
+        if val is not None:
+            history.append(val)
+
+    stable_at = None
+    reason = "timeout"
+
+    while monotonic() - start < timeout:
+        ok, frame = capture.read()
+        if not ok or frame is None:
+            sleep(0.005)
+            continue
+        captured_at = monotonic()
+        total_read += 1
+        val = metric(frame, actual_width, actual_height, captured_at)
+        previous_frame_at = captured_at
+        if val is not None:
+            history.append(val)
+            if len(history) > window_size:
+                history = history[-window_size:]
+            if len(history) >= window_size:
+                mean_val = sum(history) / len(history)
+                if mean_val > 0:
+                    max_dev = max(abs(v - mean_val) for v in history)
+                    cv_pct = max_dev / mean_val
+                    if cv_pct <= tolerance:
+                        stable_at = monotonic()
+                        reason = "stable"
+                        break
+
+    elapsed = max(monotonic() - start, 1e-9)
+
+    if condition == "fps":
+        measured = total_read / elapsed
+    else:
+        measured = None
+
+    stability_result = {
+        "condition": condition,
+        "window_size": window_size,
+        "tolerance_pct": args.stable_tolerance,
+        "timeout_s": args.stable_timeout,
+        "outcome": reason,
+        "total_frames_read": total_read,
+        "elapsed_s": elapsed,
+        "measured_fps": measured,
+        "stable_at_s": round(stable_at - start, 3) if stable_at is not None else None,
+        "history_size": len(history),
+        "notes": [],
+    }
+    if condition == "brightness" and history:
+        stability_result["brightness_mean"] = round(sum(history) / len(history), 4)
+        stability_result["brightness_range"] = [round(min(history), 4), round(max(history), 4)]
+    elif condition == "fps":
+        stability_result["notes"].append(
+            "fps stability uses per-frame intervals; measured_fps is the overall rate"
+        )
+    elif condition == "framesize":
+        stability_result["notes"].append("framesize condition always returns the same value for a given device; stability is trivially met")
+
+    return stability_result, total_read
+
+
 def probe_device(cv2, device, args, save_state):
     result = {
         "device": device,
@@ -158,12 +261,22 @@ def probe_device(cv2, device, args, save_state):
             read_frames = 0
             first_frame = None
             start = time.monotonic()
-            for _ in range(requested_frames):
+
+            if args.stable_condition:
                 ok, frame = capture.read()
                 if ok and frame is not None:
-                    read_frames += 1
-                    if first_frame is None:
-                        first_frame = frame
+                    first_frame = frame
+                stability, read_frames = monitor_until_stable(
+                    capture, first_frame, actual_width, actual_height, args,
+                )
+            else:
+                for _ in range(requested_frames):
+                    ok, frame = capture.read()
+                    if ok and frame is not None:
+                        read_frames += 1
+                        if first_frame is None:
+                            first_frame = frame
+
             elapsed = max(time.monotonic() - start, 1e-9)
             measured_fps = read_frames / elapsed
 
@@ -177,7 +290,7 @@ def probe_device(cv2, device, args, save_state):
                     "fourcc": actual_fourcc,
                 },
                 "capture_sample": {
-                    "frames_requested": requested_frames,
+                    "frames_requested": requested_frames if not args.stable_condition else stability["total_frames_read"],
                     "frames_read": read_frames,
                     "measured_fps": measured_fps,
                     "elapsed_seconds": elapsed,
@@ -187,6 +300,15 @@ def probe_device(cv2, device, args, save_state):
                     "shape": list(first_frame.shape) if first_frame is not None else None,
                 },
             })
+            if args.stable_condition:
+                attempt["stability"] = stability
+                if stability["outcome"] == "stable":
+                    attempt["notes"] = attempt.get("notes", [])
+                    attempt["notes"].append(
+                        "Stability outcome 'stable' means the metric stayed within "
+                        "tolerance for the window; it does not guarantee long-term "
+                        "stability over hours or across power cycles."
+                    )
             if first_frame is not None and args.save_frame and not save_state["saved"]:
                 parent = os.path.dirname(os.path.abspath(args.save_frame))
                 if parent and not os.path.isdir(parent):
@@ -228,6 +350,15 @@ def text_summary(report):
             print("  sample: {}/{} frames, {:.2f} FPS".format(
                 sample.get("frames_read", 0), sample.get("frames_requested", 0), sample.get("measured_fps", 0.0)
             ))
+            stab = selected.get("stability")
+            if stab:
+                print("  stability: outcome={} metric={} window={} tolerance={:.1f}% elapsed={:.1f}s".format(
+                    stab.get("outcome"), stab.get("condition"),
+                    stab.get("window_size"), stab.get("tolerance_pct"),
+                    stab.get("elapsed_s"),
+                ))
+                if stab.get("stable_at_s") is not None:
+                    print("  stable_at: {:.1f}s".format(stab["stable_at_s"]))
         formats = device.get("formats", {})
         print("  v4l2_formats: {}".format(formats.get("status", "unknown")))
 
@@ -249,6 +380,16 @@ def main():
     if args.fourcc and len(args.fourcc) != 4:
         print("--fourcc must contain exactly four characters", file=sys.stderr)
         return 2
+    if args.stable_condition:
+        if args.stable_window < 5:
+            print("--stable-window must be >= 5", file=sys.stderr)
+            return 2
+        if args.stable_tolerance <= 0:
+            print("--stable-tolerance must be > 0", file=sys.stderr)
+            return 2
+        if args.stable_timeout <= 0:
+            print("--stable-timeout must be > 0", file=sys.stderr)
+            return 2
 
     cv2, import_error = cv2_import()
     report = {
@@ -264,6 +405,7 @@ def main():
             "fourcc": args.fourcc,
             "frames": args.frames,
             "save_frame": args.save_frame,
+            "stable_condition": args.stable_condition,
         },
         "opencv": {"status": "installed" if cv2 else "missing", "error": import_error},
         "devices": [],

@@ -1,4 +1,5 @@
 /scripts/__pycache__/
+/tests/__pycache__/
 /examples/**/__pycache__/
 /baseline-*/
 /camera-baseline.json
