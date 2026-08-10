@@ -13,13 +13,20 @@
 ![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
 ![Claude Code Skill](https://img.shields.io/badge/ClaudeCode-Skill-green.svg)
 ![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
-![Version](https://img.shields.io/badge/Version-v1.4.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-v1.5.0-blue.svg)
 
 ---
 
-当前公开版本：**v1.4.0**
+当前公开版本：**v1.5.0**
 
 <details open>
+<summary><b>v1.5.0</b></summary>
+补齐泰山派历史实板探针证据链，明确区分静态检查、单元测试、R1–R7 合成行为回归、探针实板基线和项目级端到端验证；新增 GitHub Actions、仓库负向门禁和实板证据记录模板。Codex 与 Claude Code 入口改由单一模板生成，固定入口从约 17 KB 精简到约 7 KB，同时保留首次门禁、板端证据边界、接口与闭环安全规则。
+
+本版本已通过生成一致性、内容/链接/版本校验、8 项单元与仓库门禁测试、Python/Bash 语法和空白检查。历史实板基线继续有效，但原始产物仍未归档；camera v0.1.2 稳定性模式仍待当前版本实板复验。
+</details>
+
+<details>
 <summary><b>v1.4.0</b></summary>
 新增鲁棒识别与闭环调优工作流，并基于真实现场联调与闭环审查对话补强摄像头分层诊断、VLC/录像延迟分解、协议与发布频率冻结、精确进程管理、网络切换回退、板端部署校验和启动控制状态机；修复摄像头探针 FPS 稳定条件永不通过及长时间缓存全部帧的问题，并加入无第三方依赖的回归测试。本版本已通过本地内容、语法和合成场景回归；泰山派实板链路仍需按具体项目验证。
 
