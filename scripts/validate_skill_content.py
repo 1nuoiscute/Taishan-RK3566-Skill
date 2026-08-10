@@ -3,18 +3,23 @@
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ROOT = Path(__file__).resolve().parents[1]
+ROOT = DEFAULT_ROOT
 REQUIRED_FILES = (
     "VERSION",
     "SKILL.md",
     "claude/SKILL.md",
+    "skill-src/SKILL.md.tmpl",
     "README.md",
     "agents/openai.yaml",
+    ".github/workflows/validate.yml",
+    "scripts/generate_skill_entries.py",
     "references/validation-scenarios.md",
     "references/nuedc-topic-coverage.md",
     "references/robust-vision-control.md",
@@ -26,6 +31,10 @@ REQUIRED_FILES = (
     "templates/existing-project-change.md",
     "templates/acceptance-checklist.md",
     "templates/perception-control-tuning.md",
+    "templates/hardware-evidence-record.md",
+    "validation/1.4.0.md",
+    "validation/risk-audit-1.4.0.md",
+    "validation/hardware/2026-07-21-historical-baseline.md",
 )
 STATE_LABELS = ("已确认事实", "用户选择", "合理假设", "待验证")
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
@@ -53,6 +62,7 @@ SHARED_ROUTES = (
     "templates/project-architecture.md",
     "templates/acceptance-checklist.md",
     "templates/debug-evidence.md",
+    "templates/hardware-evidence-record.md",
     "templates/yolo-data-and-training.md",
     "templates/performance-report.md",
     "templates/perception-control-tuning.md",
@@ -76,7 +86,9 @@ def read(relative_path: str) -> str:
     return (ROOT / relative_path).read_text(encoding="utf-8")
 
 
-def main() -> int:
+def main(root: Path = DEFAULT_ROOT) -> int:
+    global ROOT
+    ROOT = root.resolve()
     errors: list[str] = []
 
     for relative_path in REQUIRED_FILES:
@@ -109,6 +121,24 @@ def main() -> int:
     topic_coverage = read("references/nuedc-topic-coverage.md")
     scenarios = read("references/validation-scenarios.md")
     interface = read("agents/openai.yaml")
+    release_validation = read("validation/1.4.0.md")
+    hardware_record = read("templates/hardware-evidence-record.md")
+    hardware_history = read("validation/hardware/2026-07-21-historical-baseline.md")
+    workflow = read(".github/workflows/validate.yml")
+
+    template = read("skill-src/SKILL.md.tmpl")
+    expected_platform_skills = {
+        "SKILL.md": template.replace("{{PLATFORM}}", "Codex"),
+        "claude/SKILL.md": template.replace("{{PLATFORM}}", "Claude Code"),
+    }
+    for relative_path, expected in expected_platform_skills.items():
+        if platform_skills[relative_path] != expected:
+            errors.append(f"generated Skill entry is stale: {relative_path}")
+    if "{{PLATFORM}}" not in template or re.search(r"{{[^}]+}}", template.replace("{{PLATFORM}}", "")):
+        errors.append("Skill source template has an invalid platform placeholder")
+    for relative_path in PLATFORM_SKILLS:
+        if (ROOT / relative_path).stat().st_size > 11234:
+            errors.append(f"{relative_path} exceeds the 35% reduction budget of 11234 bytes")
 
     for label in STATE_LABELS:
         for relative_path, content in (
@@ -130,8 +160,10 @@ def main() -> int:
             errors.append(f"first-use gate lacks outcome: {outcome}")
 
     for scenario_id in ("R1", "R2", "R3", "R4", "R5", "R6", "R7"):
-        if scenario_id not in scenarios:
+        if not re.search(rf"^### {scenario_id}：", scenarios, re.MULTILINE):
             errors.append(f"validation scenarios lack {scenario_id}")
+        if not re.search(rf"^\| {scenario_id} .+\|", release_validation, re.MULTILINE):
+            errors.append(f"release validation lacks scenario result: {scenario_id}")
     if "scripts/probe_camera.py" not in scenarios:
         errors.append("R3 does not point to the existing camera project artifact")
 
@@ -193,6 +225,43 @@ def main() -> int:
             errors.append(f"live debugging reference lacks: {phrase}")
     if "$taishan-rk3566" not in interface or "首次门禁" not in interface:
         errors.append("agents/openai.yaml default prompt is stale")
+
+    if f"版本：{version}（正式版）" not in release_validation:
+        errors.append("release validation does not identify the current VERSION as a formal release")
+    if "版本仍标记为 beta" in release_validation:
+        errors.append("release validation incorrectly marks the current release as beta")
+    for heading in (
+        "## 1. 静态检查",
+        "## 2. 单元测试",
+        "## 3. 合成行为回归",
+        "## 4. 探针实板基线",
+        "## 5. 项目级端到端验证",
+    ):
+        if heading not in release_validation:
+            errors.append(f"release validation lacks evidence layer: {heading}")
+    evidence_statuses = (
+        "旧版已实板验证",
+        "当前版本仍有效",
+        "脚本修改后待复验",
+        "从未验证/证据不足",
+    )
+    for status in evidence_statuses:
+        if status not in hardware_record:
+            errors.append(f"hardware evidence template lacks status: {status}")
+        if status not in hardware_history:
+            errors.append(f"historical hardware record lacks status: {status}")
+    public_wording = "已有一套历史泰山派探针实测基线，但原始证据归档和当前脚本版本复验仍需完善"
+    if public_wording not in readme:
+        errors.append("README lacks the approved historical board-evidence wording")
+    for command in (
+        "python -m unittest discover -s tests -v",
+        "scripts/generate_skill_entries.py --check",
+        "scripts/validate_skill_content.py",
+        "bash -n",
+        "git diff --check",
+    ):
+        if command not in workflow:
+            errors.append(f"CI workflow lacks required check: {command}")
     for markdown_file in ROOT.rglob("*.md"):
         content = markdown_file.read_text(encoding="utf-8")
         for raw_target in LINK_PATTERN.findall(content):
@@ -218,4 +287,7 @@ def finish(errors: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    args = parser.parse_args()
+    sys.exit(main(args.root))

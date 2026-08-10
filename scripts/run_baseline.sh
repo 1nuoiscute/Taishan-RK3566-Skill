@@ -57,11 +57,28 @@ mkdir -p "$OUTPUT_DIR"
 STATUS_FILE="${OUTPUT_DIR}/status.tsv"
 MANIFEST_FILE="${OUTPUT_DIR}/manifest.txt"
 printf 'probe\texit_code\tjson\tstderr\n' > "$STATUS_FILE"
+
+command_value() {
+    "$@" 2>/dev/null || printf 'unavailable'
+}
+
 {
     printf 'created_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     printf 'root=%s\n' "$ROOT_DIR"
     printf 'output_dir=%s\n' "$OUTPUT_DIR"
     printf 'python=%s\n' "$PYTHON_BIN"
+    printf 'git_sha=%s\n' "$(command_value git -C "$ROOT_DIR" rev-parse HEAD)"
+    printf 'kernel=%s\n' "$(command_value uname -srmo)"
+    printf 'script_hash_algorithm=sha256\n'
+    if command -v sha256sum >/dev/null 2>&1; then
+        (
+            cd "$ROOT_DIR" || exit 1
+            sha256sum scripts/run_baseline.sh scripts/probe_system.sh scripts/probe_camera.py \
+                scripts/probe_uart.py scripts/probe_gpio.py scripts/probe_rknn.py
+        )
+    else
+        printf 'script_hashes=unavailable\n'
+    fi
 } > "$MANIFEST_FILE"
 
 run_probe() {
