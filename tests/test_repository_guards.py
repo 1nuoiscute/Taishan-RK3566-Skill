@@ -21,6 +21,8 @@ class RepositoryGuardTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name) / "repo"
         shutil.copytree(ROOT, self.root, ignore=ignore_copy)
+        version = (self.root / "VERSION").read_text(encoding="utf-8").strip()
+        self.release_validation = f"validation/{version}.md"
 
     def tearDown(self):
         self.temp.cleanup()
@@ -64,7 +66,7 @@ class RepositoryGuardTests(unittest.TestCase):
 
     def test_current_release_marked_beta_is_rejected(self):
         self.mutate(
-            "validation/1.4.0.md",
+            self.release_validation,
             lambda value: value + "\n版本仍标记为 beta。\n",
         )
         self.assert_rejected("incorrectly marks the current release as beta")
@@ -75,7 +77,7 @@ class RepositoryGuardTests(unittest.TestCase):
 
     def test_missing_evidence_layer_is_rejected(self):
         self.mutate(
-            "validation/1.4.0.md",
+            self.release_validation,
             lambda value: value.replace("## 4. 探针实板基线", "## 4. 其他记录", 1),
         )
         self.assert_rejected("release validation lacks evidence layer")

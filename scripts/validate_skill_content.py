@@ -32,7 +32,6 @@ REQUIRED_FILES = (
     "templates/acceptance-checklist.md",
     "templates/perception-control-tuning.md",
     "templates/hardware-evidence-record.md",
-    "validation/1.4.0.md",
     "validation/risk-audit-1.4.0.md",
     "validation/hardware/2026-07-21-historical-baseline.md",
 )
@@ -108,6 +107,11 @@ def main(root: Path = DEFAULT_ROOT) -> int:
     if f"v{version}" not in readme:
         errors.append("README.md does not contain the VERSION value")
 
+    release_validation_path = f"validation/{version}.md"
+    if not (ROOT / release_validation_path).is_file():
+        errors.append(f"missing current release validation: {release_validation_path}")
+        return finish(errors)
+
     platform_skills = {
         relative_path: read(relative_path) for relative_path in PLATFORM_SKILLS
     }
@@ -121,7 +125,7 @@ def main(root: Path = DEFAULT_ROOT) -> int:
     topic_coverage = read("references/nuedc-topic-coverage.md")
     scenarios = read("references/validation-scenarios.md")
     interface = read("agents/openai.yaml")
-    release_validation = read("validation/1.4.0.md")
+    release_validation = read(release_validation_path)
     hardware_record = read("templates/hardware-evidence-record.md")
     hardware_history = read("validation/hardware/2026-07-21-historical-baseline.md")
     workflow = read(".github/workflows/validate.yml")
