@@ -1,0 +1,38 @@
+name: Validate Skill
+
+on:
+  pull_request:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check generated platform entries
+        run: python scripts/generate_skill_entries.py --check
+      - name: Validate content, links, version, scenarios, and evidence layers
+        run: python scripts/validate_skill_content.py
+      - name: Run unit and repository-guard tests
+        run: python -m unittest discover -s tests -v
+      - name: Compile Python
+        run: python -m compileall -q scripts tests
+      - name: Check Bash syntax
+        run: bash -n scripts/run_baseline.sh scripts/probe_system.sh
+      - name: Check whitespace
+        run: |
+          if [ -n "${{ github.base_ref }}" ]; then
+            git diff --check "origin/${{ github.base_ref }}...HEAD"
+          else
+            git show --check --format= HEAD
+          fi
