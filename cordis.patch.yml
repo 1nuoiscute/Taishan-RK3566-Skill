@@ -1,0 +1,4 @@
+# Mount on the host skill registry supplied by Standard/Creator profiles.
+- insert:
+    - id: dsh-taishan-rk3566
+      name: dsh-taishan-rk3566

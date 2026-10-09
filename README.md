@@ -1,6 +1,6 @@
 # 泰山派 RK3566 电赛视觉 Skill
 
-> 面向电赛视觉的 RK3566 Linux 工程验证型 Skill，支持 Codex 与 Claude Code。
+> 面向电赛视觉的 RK3566 Linux 工程验证型 Skill，支持 Codex、Claude Code 与 DeepSeek Harness。
 
 ---
 
@@ -12,14 +12,22 @@
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Codex Skill](https://img.shields.io/badge/Codex-Skill-green.svg)
 ![Claude Code Skill](https://img.shields.io/badge/ClaudeCode-Skill-green.svg)
+![DeepSeek Harness Plugin](https://img.shields.io/badge/DeepSeek_Harness-Plugin-blue.svg)
 ![Target Hardware](https://img.shields.io/badge/Hardware-RK3566-orange.svg)
-![Version](https://img.shields.io/badge/Version-v1.5.0-blue.svg)
+![Version](https://img.shields.io/badge/Version-v1.6.0-blue.svg)
 
 ---
 
-当前公开版本：**v1.5.0**
+当前公开版本：**v1.6.0**
 
 <details open>
+<summary><b>v1.6.0</b></summary>
+新增 DeepSeek Harness 原生插件：通过 Skill provider 按需加载工作流及共用资源。Codex、Claude Code 和 DSH 入口由同一模板生成；新增插件生命周期、同名 Skill 优先级和安装包资源检查，以及三平台独立安装包。
+
+DSH 兼容目标为实际发布的 0.2.0-rc.2。插件只注册技能，不自动连接板卡或执行硬件探针；安装成功不代表板端链路已经验证。完整验证结果见 [v1.6.0 发布记录](https://github.com/1nuoiscute/Taishan-RK3566-Skill/blob/v1.6.0/validation/1.6.0.md)。
+</details>
+
+<details>
 <summary><b>v1.5.0</b></summary>
 补齐泰山派历史实板探针证据链，明确区分静态检查、单元测试、R1–R7 合成行为回归、探针实板基线和项目级端到端验证；新增 GitHub Actions、仓库负向门禁和实板证据记录模板。Codex 与 Claude Code 入口改由单一模板生成，固定入口从约 17 KB 精简到约 7 KB，同时保留首次门禁、板端证据边界、接口与闭环安全规则。
 
@@ -164,6 +172,39 @@ cp -r path/to/Taishan-RK3566-Skill/scripts .claude/skills/taishan-rk3566/
 
 ---
 
+<details>
+<summary><b>DeepSeek Harness（DSH）</b></summary>
+
+推荐从 [v1.6.0 Release](https://github.com/1nuoiscute/Taishan-RK3566-Skill/releases/tag/v1.6.0) 下载插件包，然后在 DSH Standard/Creator 所在的 Web Profile 安装：
+
+~~~bash
+npx @deepseek-ai/dsh@0.2.0-rc.2 plugin --profile web add ./dsh-taishan-rk3566-1.6.0.tgz
+~~~
+
+也可以安装固定版本的 GitHub 仓库：
+
+~~~bash
+npx @deepseek-ai/dsh@0.2.0-rc.2 plugin --profile web add github:1nuoiscute/Taishan-RK3566-Skill#v1.6.0
+~~~
+
+重启该 Profile 后，在新对话中输入：
+
+~~~text
+请使用 taishan-rk3566 技能分析这道电赛视觉题，先完成首次使用门禁和题目约束卡。
+~~~
+
+已有同名本地 Skill 会优先于插件内置版本。卸载：
+
+~~~bash
+npx @deepseek-ai/dsh@0.2.0-rc.2 plugin --profile web remove dsh-taishan-rk3566
+~~~
+
+Desktop 用户可在 **Desktop 自带的 DSH 终端**执行 dsh plugin add <插件包绝对路径>，然后重启桌面版；这一入口来自 Desktop 2.0.17 的终端说明，本次未实测 Desktop 安装。也可以使用下面的目录 Skill 安装方式。本次原生插件安装验证使用官方 CLI 的 Web/SDK Profile。独立 CLI 不管理保留的 desktop Profile。本次兼容性验证针对 DSH 0.2.0-rc.2，不承诺其他预览版本接口相同。
+
+只需要目录形式 Skill 时，将 Release 中的 dsh-skill ZIP 解压到 ~/.dsh/skills，或项目的 .dsh/skills。目录应为 taishan-rk3566/SKILL.md 并包含配套 references、templates、scripts；不要只复制入口文件。插件加载资源需要当前环境的文件读取能力，受当前沙箱和权限设置约束。
+
+</details>
+
 ### 1. 首次使用时，Skill 会优先确认：
 
 - 当前板卡、系统、内核、架构和 AI 能否访问板端；
@@ -234,6 +275,10 @@ Skill 会把“已在板端执行的事实”和“待验证的假设”分开�
 Taishan-RK3566-Skill/
 ├── SKILL.md               # Codex 入口
 ├── claude/SKILL.md        # Claude Code 入口
+├── dsh/SKILL.md           # DSH 入口
+├── dsh/index.mjs          # DSH 原生 Skill provider
+├── package.json           # 插件安装包元数据
+├── cordis.patch.yml       # DSH Bundle 挂载层
 ├── references/            # 板端运行时、视觉任务、工程架构、调试、验证等参考文档
 ├── templates/             # 门禁、题目需求、方案矩阵、感知/控制调优、验收等模板
 ├── scripts/               # 系统、摄像头、UART、GPIO、RKNN 探针
@@ -241,7 +286,7 @@ Taishan-RK3566-Skill/
 └── README.md
 ```
 
-`references/`、`templates/`、`scripts/` 是两个版本共用的资料、模板和探针脚本。
+`references/`、`templates/`、`scripts/` 是三个平台共用的资料、模板和探针脚本。
 
 ## 工程边界
 

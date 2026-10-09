@@ -1,4 +1,5 @@
 import os
+import json
 import shutil
 import subprocess
 import sys
@@ -12,7 +13,7 @@ VALIDATOR = ROOT / "scripts" / "validate_skill_content.py"
 
 
 def ignore_copy(directory, names):
-    ignored = {".git", "tmp", "__pycache__"}
+    ignored = {".git", "tmp", "__pycache__", "node_modules", "dist"}
     return [name for name in names if name in ignored]
 
 
@@ -56,6 +57,18 @@ class RepositoryGuardTests(unittest.TestCase):
     def test_single_generated_entry_edit_is_rejected(self):
         self.mutate("SKILL.md", lambda value: value + "\nmanual drift\n")
         self.assert_rejected("generated Skill entry is stale: SKILL.md")
+
+    def test_dsh_generated_entry_drift_is_rejected(self):
+        self.mutate("dsh/SKILL.md", lambda value: value + "\\nmanual drift\\n")
+        self.assert_rejected("generated Skill entry is stale: dsh/SKILL.md")
+
+    def test_dsh_package_version_mismatch_is_rejected(self):
+        def change_version(value):
+            package = json.loads(value)
+            package["version"] = "9.9.9"
+            return json.dumps(package)
+        self.mutate("package.json", change_version)
+        self.assert_rejected("DSH package version differs from VERSION")
 
     def test_missing_r4_is_rejected(self):
         self.mutate(

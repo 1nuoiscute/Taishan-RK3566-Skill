@@ -19,6 +19,21 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install DSH test dependencies
+        run: npm ci
+      - name: Test native DSH skill lifecycle and resources
+        run: npm test
+      - name: Check installable plugin package
+        run: |
+          mkdir -p dist tmp/packed
+          npm pack --pack-destination dist
+          python scripts/check_dsh_package.py dist/dsh-taishan-rk3566-*.tgz
+          tar -xzf dist/dsh-taishan-rk3566-*.tgz -C tmp/packed
+          node scripts/test_dsh_package.mjs tmp/packed/package
       - name: Check generated platform entries
         run: python scripts/generate_skill_entries.py --check
       - name: Validate content, links, version, scenarios, and evidence layers

@@ -1,3 +1,6 @@
+/node_modules/
+/dist/
+/tmp/
 /scripts/__pycache__/
 /tests/__pycache__/
 /examples/**/__pycache__/
