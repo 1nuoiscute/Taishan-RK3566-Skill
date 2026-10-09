@@ -17,6 +17,7 @@
     "scripts/probe_*.py",
     "scripts/probe_system.sh",
     "scripts/run_baseline.sh",
+    "tests/test_probe_camera.py",
     "VERSION",
     "README.md",
     "LICENSE"

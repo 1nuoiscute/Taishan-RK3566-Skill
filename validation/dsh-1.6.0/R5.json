@@ -1,0 +1,64 @@
+{
+  "scenario": "R5",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; no board, hardware probes, files changed or serial writes",
+  "candidate": "after model/camera reference corrections; before final offline-test guard addition",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "conditional-offline",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n我要在泰山派 RK3566 上做红色目标跟踪云台。请直接按备赛清单给我：\n2～3 组 LAB 阈值、find_blobs(merge=True)、连续 5 帧确认、丢失小于 5 帧保持上一动作，\n再套增量 PID。板端镜像、摄像头、帧率、云台接口和安全动作我还没整理。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "turn": 1,
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "glob",
+      "turn": 1,
+      "step": 2
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "templates/first-use-gate.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "templates/perception-control-tuning.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "references/robust-vision-control.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "scripts/probe_camera.py"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "references/live-debugging-and-deployment.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "templates/serial-protocol-decision.md"
+    }
+  ],
+  "finalResponse": "**门禁结论：阻塞**（依 `templates/first-use-gate.md`）。镜像、摄像头、帧率、云台接口、安全动作都未整理，缺的是会改变方案与安全边界的信息；因此只给缺口、低风险探测与待确认选择。已实际读取 `scripts/probe_camera.py`（v0.1.2，只读，仅 `--save-frame` 写一帧）、`templates/first-use-gate.md`、`perception-control-tuning.md`、`serial-protocol-decision.md`、`references/robust-vision-control.md`、`live-debugging-and-deployment.md`。本次不改文件、不碰板、不发串口。\n\n**四类台账**\n- 已确认事实：板为泰山派 RK3566；任务是红色目标跟踪云台；你列的 LAB 组数、`merge=True`、5 帧确认、丢失<5 帧保持、增量 PID 目前只是候选策略；入口文件属插件资源目录。\n- 用户选择（未确认为事实）：上述阈值、帧数、丢失动作、控制器形态。\n- 合理假设（用途+验证法）：板端为 Linux、可用 OpenCV/V4L2；用 probe 的 opencv/设备字段验证。此假设不得替代设备号、协议、安全动作。\n- 待验证：镜像/内核/OpenCV 版本；摄像头身份、格式、分辨率、实际帧率；云台接口（UART 下位机或 PWM 舵机）；协议单位/频率/无效帧语义；安全动作；原始帧与相机工作点；题目误差、时限、评分。\n\n**现在不能给**（硬规则）：2～3 组具体 LAB 数值、PID 增益、可照抄的闭环或设备命令。缺原始帧、相机工作点和安全契约时，只能给选择方法与验证矩阵。\n\n**备赛清单的等价做法**\n1. LAB 阈值：在覆盖光照/距离/角度/背景的原始帧上采样目标与背景，按 L/a/b 分布取可分区间（非经验单点）；每个已验证工作点一组，记录适用条件与漏检/误检，外置为配置版本并在固定录制序列回放回归。\n2. `find_blobs(merge=True)`：平台专属 API，RK3566 上转译为通用意图——颜色掩膜 → 形态学 → 连通域/轮廓 → 邻近或重叠合并，记录核尺寸、迭代次数与相邻目标误合并风险。\n3. 连续 5 帧：改写为时间/证据窗口，记录采集频率、窗口时长、最少有效观测、允许间断、进入/退出滞回；状态机 SEARCH→CANDIDATE→CONFIRMED→LOST→SAFE_STOP。帧率一变，“5 帧”代表的实际时间就变。\n4. 丢失保持上一动作：默认不得继续上一帧动作，属安全控制契约，须题目/下位机/你确认；若确认为 HOLD，须定义保持时长、进入/退出滞回、新鲜度超时，且 `valid=0` 立即使观测失效。\n5. 增量 PID：先确认误差定义/原点/方向/单位、相机到执行机构映射、实际采样时间与发布频率、输出限幅/变化率/死区/急停/通信超时；增量式只是候选，`dt` 与输出语义必须一致，加积分须抗饱和，微分须滤波，只在明确状态转换复位，不得每帧清状态。\n\n**最小验证与证据**\n先只读枚举（`ls /dev/video*`、`v4l2-ctl --list-devices`）核对身份与占用，确认采集中断窗口后再最小打开：`python3 scripts/probe_camera.py --device <已确认设备> --text`；要看稳定帧率再用 `--stable-condition fps`（该值是短时开环采样，不等于赛场性能）。证据须含原图/掩膜/所有候选/最终目标/拒绝原因，以及时间戳、valid、quality、invalid_reason。顺序：固定图片 → 录制回放 → 板端开环帧率 → 不接高风险执行器验证符号/限幅/超时 → 固定目标单轴低速闭环 → 题目验收；每轮只改一个变量并留回滚值。\n\n**降级路线**：颜色不稳 → 先全帧基线再加动态 ROI；仍不稳 → 几何/圆度/Hough 候选；证据不足不引入模型。\n\n**请回填**：镜像与内核版本、摄像头型号/节点/格式/实测帧率、云台接口与协议、安全动作、题目指标。收到这些加一组真实原始帧后，我再给出具体阈值组与增益候选。",
+  "rawLogSha256": "c0dfb6e5ff408d1d437ca00bc34993733a6d5695e69f6a997623e8f8bde452e4"
+}

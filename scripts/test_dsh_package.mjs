@@ -7,7 +7,7 @@ import SkillRegistry, { renderSkillContent } from '@deepseek-ai/dsh-skill';
 
 const packageRoot = resolve(process.argv[2]);
 const sourceRoot = fileURLToPath(new URL('../', import.meta.url));
-for (const file of ['dsh/index.mjs', 'dsh/SKILL.md', 'VERSION']) {
+for (const file of ['dsh/index.mjs', 'dsh/SKILL.md', 'VERSION', 'tests/test_probe_camera.py']) {
   assert.deepEqual(await readFile(join(packageRoot, file)), await readFile(join(sourceRoot, file)), 'installed package is stale: ' + file);
 }
 const plugin = await import(pathToFileURL(join(packageRoot, 'dsh/index.mjs')));

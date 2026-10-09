@@ -1,0 +1,52 @@
+{
+  "scenario": "R6",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; no board, hardware probes, files changed or serial writes",
+  "candidate": "after model/camera reference corrections; before final offline-test guard addition",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "conditional-offline",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n队友正在用当前 YOLO+UART 程序联调，VLC 延迟会越跑越大。\n刚才固定的 /dev/video9 又消失了。直接帮我改，协议和识别分辨率不要动，不能中断太久。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "turn": 1,
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "glob",
+      "turn": 1,
+      "step": 2
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "scripts/probe_camera.py"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "references/board-and-runtime.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "references/live-debugging-and-deployment.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "references/debugging-playbook.md"
+    }
+  ],
+  "finalResponse": "## 门禁结论：部分通过（只做离线审查与方案，不落盘、不碰板）\n\n本会话是 DSH 本地工作区，无板端 shell；按规则不能声称已读板端源码或已执行探针。故**不直接改**，只给最小可回滚事务与取证。\n\n### 四类台账\n\n**已确认事实（来自技能与脚本）**\n- `probe_camera.py` v0.1.2 本身就是\"打开设备并采集\"的探测，`--stable-condition` 会连续读帧到稳定或超时；默认不加 `--device` 会遍历全部 `/dev/video*`。它**不是纯枚举**。\n- 技能硬规则：易变的 `/dev/videoN` 只作当次事实；节点不存在 ≠ 被占用；身份未核验前不建/不覆盖符号链接、不改路径。\n- 图传链路分层固定为：采集→推理/叠加→编码→服务端队列→无线→播放器缓存→录像；\"延迟随时间增长\"优先查**无界队列、重复发旧帧、消费者变慢、播放器缓存**，但症状不能直接证明根因或排除网络。\n- 识别分辨率、图传分辨率、录像分辨率是三个契约；优化预览不得顺带改识别坐标。\n\n**用户选择**：协议与识别分辨率冻结；不能中断太久。\n\n**合理假设（未验证）**：`/dev/video9` 消失可能来自 USB 重枚举/供电、驱动或媒体枚举变化、编号漂移，其中任一条都尚无证据支撑唯一补丁。\n\n**待验证/待提供**：`/dev/video*`、`/dev/media*`、`v4l2-ctl --list-devices`、`/dev/v4l/by-id|by-path`、`lsusb -t`、`dmesg | grep -Ei 'usb|uvc|video'` 的**原始输出**；当前运行文件与本地文件校验和、启动命令或 unit、活动 PID、编码命令、VLC 参数、实际采集/发布帧率。\n\n### 建议动作（按现场节奏，一次只改一个变量）\n\n1. **冻结**：记下 `systemd unit 或精确 PID`、`/proc/<PID>` 的 cmdline、文件校验和、当前协议版本与发布频率。队友在联调，禁用 `pkill -f`，只用精确 unit/PID。\n2. **只读取证（不采集）**：`ls -l /dev/video* /dev/media*`、`command -v v4l2-ctl && v4l2-ctl --list-devices`、`ls -l /dev/v4l/by-id/ /dev/v4l/by-path/`、`dmesg | grep -Ei 'usb|uvc|video|v4l2' | tail -100`。这一步零副作用。\n3. **核身份**：把 by-id/by-path 链接与\"目标相机的 capture 节点\"对应起来（同一相机常枚举多个用途节点）。**核验前不改任何路径。**\n4. **才可选稳定路径**：仅当确实漂移、且确认采集中断窗口后，用 `<已核验的 /dev/v4l/by-id/...>` 在**启动参数/udev rule/应用配置**里替换 `video9`。具体 `ATTRS{serial}`/`by-path` 值必须填你实机输出，我不给猜测值。回滚＝改回原路径并重启该服务，旧版本文件保留。\n5. **延迟分层**：分别记录采集帧率、推理耗时、编码帧率、码率、端到端时延。诊断序：先看是否为**无界队列/发旧帧**（实时预览应是有界\"最新帧\"语义，慢客户端丢过期帧）；再调 VLC 缓存（越小延迟越低但更易卡顿，只能作**当前网络的候选值**，非通用最优）；最后才怀疑网络与解码。识别分辨率、编码分辨率保持不动。\n6. **主观\"越跑越大\"**要转成数字：同屏时钟/闪光事件的端到端测量，并记录进程 FD/内存是否增长。\n\n### 待实测项（不能算已达成）\n相机身份与节点用途、漂移根因、延迟增长的具体层级、队列上限与缓存取值、连续运行时长与稳定性——均待你提供原始输出后确认。我不会在缺源码、日志与身份证据时承诺唯一根因或数值阈值。",
+  "rawLogSha256": "653920f1cfd8453a74e86dd66431e98a699b06b38d861dd4b92b4717f1098e86"
+}

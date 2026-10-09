@@ -14,9 +14,10 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 只读取当前任务需要的资料：
 
 - 来源、陌生题和研究边界：`references/source-index.md`、`references/nuedc-topic-coverage.md`、`references/research-guidance.md`。
-- 板端发现与真实基线：`references/board-and-runtime.md`；运行 `scripts/run_baseline.sh` 或相关 `scripts/probe_*`，保存 JSON、stderr、命令、版本和退出码后才能称为实板基线。
+- 板端发现与真实基线：`references/board-and-runtime.md`；按当前任务运行相关 `scripts/probe_*`；`scripts/run_baseline.sh` 会打开摄像头和全部候选串口，只有完整接口基线已授权且候选设备/串口配置已确认时才推荐，不能当纯只读枚举，保存 JSON、stderr、命令、版本和退出码后才能称为实板基线。
 - 视觉方案与工程：`references/vision-task-archetypes.md`、`references/robust-vision-control.md`、`references/architecture-patterns.md`。
 - 调试、部署和已有工程：`references/debugging-playbook.md`、`references/live-debugging-and-deployment.md`、`references/existing-project-integration.md`。
+- 上电位置、控制不收敛：必读 references/live-debugging-and-deployment.md 的控制状态审查；核对实际固件/校验和、目标来源、物理零位、首帧不能证明速度为零、valid=0/超时、HOLD 持续时间与进入/退出滞回、PID 状态是否每帧反复复位。
 - 证据与发布回归：`references/validation-and-evidence.md`、`references/validation-scenarios.md`；RKNN 案例仅见 `references/yolo-rknn-validated-case.md`，不得泛化其配置和性能。
 - 需求与决策模板：`templates/first-use-gate.md`、`templates/task-intake.md`、`templates/quick-check-intake.md`、`templates/solution-options.md`、`templates/existing-project-change.md`、`templates/serial-protocol-decision.md`。
 - 交付与调优模板：`templates/project-architecture.md`、`templates/acceptance-checklist.md`、`templates/debug-evidence.md`、`templates/hardware-evidence-record.md`、`templates/yolo-data-and-training.md`、`templates/performance-report.md`、`templates/perception-control-tuning.md`。
@@ -24,14 +25,14 @@ description: Plan, implement, debug, and validate NUEDC-style computer-vision pr
 ## 门禁与硬规则
 
 1. 首次使用门禁按 `templates/first-use-gate.md` 建立“已确认事实、用户选择、合理假设、待验证”台账；结论只能是“通过、部分通过、阻塞”。部分通过只做列出的最小验证，阻塞只给缺口和低风险探测。
-2. 先确认题目、评分、误差、时限、场景、硬件、通信、执行机构、失败条件和安全约束。信息不足时不得确定设备号、引脚、协议、坐标、模型、性能或完整工程。用户提出的阈值、帧数、丢失动作和算法只属于“用户选择/候选策略”，不能列为已确认事实；未知的现场条件不能因方案常见而升级为事实。
-3. 物理连接以官方原理图和 IO 表为准，运行时接口以当前镜像、内核、设备树和实板探测为准。不得从 `GPIOx_y` 猜 Linux 编号，不假设固定 `/dev/video*`、串口、摄像头后端或同一引脚同时复用；电源和 GND 不是 GPIO。
+2. 先确认题目、评分、误差、时限、场景、硬件、通信、执行机构、失败条件和安全约束。信息不足时不得确定设备号、引脚、协议、坐标、模型、性能或完整工程。用户提出的阈值、帧数、丢失动作和算法只属于“用户选择/候选策略”，不能列为已确认事实；未知的现场条件不能因方案常见而升级为事实。脚本默认值只能描述实现现状，不表示用户已经选择或确认了这些值。
+3. 物理连接以官方原理图和 IO 表为准，运行时接口以当前镜像、内核、设备树和实板探测为准。不得从 `GPIOx_y` 猜 Linux 编号，不假设固定 `/dev/video*`、串口、摄像头后端或同一引脚同时复用；电源和 GND 不是 GPIO。摄像头探针会打开设备和采集，不是纯枚举；已有采集/控制进程运行时先仅检查节点身份、权限和所有权，确认中断窗口与候选设备后才采集，不建议默认遍历打开全部节点，也不把并发采集称作“无需停程序”。UART 打开前需确认脚本实际采用的 8N1/流控配置与对端契约相容，以及 RTS/DTR 副作用；否则仍停在枚举。
 4. 性能、帧率、延迟、精度、稳定时间和资源占用必须来自目标板实测；桌面结果、合成输入和历史个案不能替代当前环境，缺证据时写“待实测”。
-5. 传统视觉、几何和标定能满足约束时不引入模型；模型路线必须确认许可证、数据、类别、预处理、输入输出、Runtime/驱动和板端证据，并提供降级路线。文件名 best.pt 不能确定 YOLO 版本、模型结构、输入布局或输入尺寸；历史案例的 YOLOv8、256/320、NHWC 和量化方式只能描述为案例条件，不能直接写入当前部署步骤。
-6. 已有工程先读入口、配置、协议和测试，保留已确认接口，只做最小修改面；交付必须含原行为基线、回滚办法、原有行为回归和新功能最小验证，不得平行重写。
+5. 传统视觉、几何和标定能满足约束时不引入模型；模型路线必须确认许可证、数据、类别、预处理、输入输出、Runtime/驱动和板端证据，并提供降级路线。文件名 best.pt 不能确定 YOLO 版本、模型结构、输入布局或输入尺寸；历史案例的 YOLOv8、256/320、NHWC 和量化方式只能描述为案例条件，不能直接写入当前部署步骤。输入维度按模型/Runtime 契约核对；仅知缺 batch 维时，只说明“保留模型定义的维度顺序并补 batch”，不能因此预设 NHWC/NCHW。模型结构未知时，不预设 DFL、解码移到 CPU 或多分支输出；先读取结构与输出契约再选择导出方案。固定 shape 查询警告只按已核验案例和实际返回值区分，不能统一忽略警告。
+6. 已有工程先读入口、配置、协议和测试；涉及本包 camera 探针时读取并运行配套 tests/test_probe_camera.py 纯离线基线（Python -B，不接硬件），先确认所请求功能是否已存在。静态疑点须给出实际分支与复现证据，不能把已实现的保护说成缺失。保留已确认接口，只做最小修改面；交付必须含原行为基线、回滚办法、原有行为回归和新功能最小验证，不得平行重写。
 7. 协议、ACK、心跳、频率、坐标单位、超时、丢失动作和安全动作都由用户材料或双方契约确定；高影响项确认前不直接生成完整闭环代码。
 8. MSPM0 或其他下位机已负责电机、巡迹和安全控制时保持边界；RK3566 默认负责视觉、坐标/误差和已确认接口。
-9. 闭环观测必须包含时间戳、有效性、质量和超时。过期观测不得驱动执行器；默认不得“继续上一帧动作”。激光、云台、电机和飞行器先低能量、限幅、急停或空载验证。
+9. 闭环观测必须包含时间戳、有效性、质量和超时。过期观测不得驱动执行器；默认不得“继续上一帧动作”。激光、云台、电机和飞行器先低能量、限幅、急停或空载验证。丢失/超时后的停止、回中或 HOLD 必须按已确认安全契约，未确认时仅列候选，不写成已确定动作；观测窗口/等待时长也不能无来源固定。
 10. 区分 Codex 当前工作区与 VS Code Remote-SSH 板端。没有远程终端权限时，只提供可复制命令、预期现象、失败含义和证据保存；收到真实输出后才能声称执行成功。设备、波特率、分辨率、像素格式、模型尺寸和稳定阈值未确认时，命令只使用 <已确认设备>、<用户确认波特率>、<已验证参数> 等占位符，不附带可直接照抄的具体猜测值。
 
 ## 工作流

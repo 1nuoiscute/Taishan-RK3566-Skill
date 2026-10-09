@@ -12,7 +12,7 @@ def build():
     version=(ROOT/"VERSION").read_text().strip()
     output=ROOT/"dist"
     output.mkdir(exist_ok=True)
-    common=[ROOT/"VERSION", ROOT/"LICENSE"]
+    common=[ROOT/"VERSION", ROOT/"LICENSE", ROOT/"tests/test_probe_camera.py"]
     common += [p for folder in ("references", "templates") for p in (ROOT/folder).rglob("*") if p.is_file()]
     common += [ROOT/"scripts"/name for name in ("probe_system.sh", "probe_camera.py", "probe_uart.py", "probe_gpio.py", "probe_rknn.py", "run_baseline.sh")]
     for platform, entry in (("codex", "SKILL.md"), ("claude", "claude/SKILL.md"), ("dsh-skill", "dsh/SKILL.md")):

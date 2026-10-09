@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def check(path):
     with tarfile.open(path, "r:gz") as archive:
         files = {m.name: m for m in archive.getmembers() if m.isfile()}
-        expected = ["package.json", "VERSION", "LICENSE", "README.md", "cordis.patch.yml", "dsh/index.mjs", "dsh/SKILL.md"]
+        expected = ["package.json", "VERSION", "LICENSE", "README.md", "cordis.patch.yml", "dsh/index.mjs", "dsh/SKILL.md", "tests/test_probe_camera.py"]
         expected += [p.relative_to(ROOT).as_posix() for folder in ("references", "templates") for p in (ROOT/folder).rglob("*") if p.is_file()]
         expected += ["scripts/" + name for name in ("probe_system.sh", "probe_camera.py", "probe_uart.py", "probe_gpio.py", "probe_rknn.py", "run_baseline.sh")]
         for relative in expected:

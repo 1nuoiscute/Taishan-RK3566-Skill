@@ -8,3 +8,4 @@ VERSION text eol=lf
 *.mjs text eol=lf
 *.json text eol=lf
 .gitignore text eol=lf
+*.tmpl text eol=lf
