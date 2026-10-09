@@ -1,0 +1,47 @@
+{
+  "scope": "Pure fake camera and fake clock; no device open, no network, no serial",
+  "source": "scripts/probe_camera.py",
+  "sourceSha256": "3c0c88988610d15b10a69be50c11325682958d02c030dd70d7e1f9c3b75c2ed3",
+  "fixture": "tests/test_probe_camera.py",
+  "cases": [
+    {
+      "condition": "fps",
+      "result": {
+        "condition": "fps",
+        "window_size": 5,
+        "tolerance_pct": 5.0,
+        "timeout_s": 2.0,
+        "outcome": "stable",
+        "total_frames_read": 6,
+        "elapsed_s": 0.4799999999999999,
+        "measured_fps": 12.500000000000002,
+        "stable_at_s": 0.44,
+        "history_size": 5,
+        "notes": [
+          "fps stability uses per-frame intervals; measured_fps is the overall rate"
+        ]
+      },
+      "totalFrames": 6
+    },
+    {
+      "condition": "framesize",
+      "result": {
+        "condition": "framesize",
+        "window_size": 5,
+        "tolerance_pct": 5.0,
+        "timeout_s": 2.0,
+        "outcome": "stable",
+        "total_frames_read": 5,
+        "elapsed_s": 0.39999999999999997,
+        "measured_fps": null,
+        "stable_at_s": 0.36,
+        "history_size": 5,
+        "notes": [
+          "framesize condition always returns the same value for a given device; stability is trivially met"
+        ]
+      },
+      "totalFrames": 5
+    }
+  ],
+  "conclusion": "Existing FPS first sample does not fill its window; both branches require a full window. Framesize still uses open-time dimensions and does not prove per-frame dimensions stable. This does not substitute for the pending model behavior recheck."
+}
