@@ -37,7 +37,7 @@ try {
   for (const { id, input } of cases) {
     const prompt = '请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n'
       + input.replaceAll('$taishan-rk3566', 'taishan-rk3566')
-      + '\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。允许用 Python -B 运行配套 tests/test_probe_camera.py 纯假对象测试；它不接触硬件，也不写文件。';
+      + '\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。允许用 Python -B 运行配套 tests/test_probe_camera.py 纯假对象测试；它不接触硬件，也不写文件。不得创建临时脚本再删除；额外假对象如需执行，必须用 Python -B stdin/-c 在内存执行。';
     const result = await harness.run(prompt);
     const termination = result.events.findLast(e => e.type === 'turn/end')?.data.reason;
     // Keep raw results outside the public repository; review and redact paths before publishing.

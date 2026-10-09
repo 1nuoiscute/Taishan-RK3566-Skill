@@ -43,5 +43,5 @@
       "totalFrames": 5
     }
   ],
-  "conclusion": "Existing FPS first sample does not fill its window; both branches require a full window. Framesize still uses open-time dimensions and does not prove per-frame dimensions stable. This does not substitute for the pending model behavior recheck."
+  "conclusion": "Existing FPS first sample does not fill its window; both branches require a full window. Framesize still uses open-time dimensions and does not prove per-frame dimensions stable. This does not substitute for the model behavior recheck."
 }
