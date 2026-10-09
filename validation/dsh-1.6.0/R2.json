@@ -1,0 +1,80 @@
+{
+  "scenario": "R2",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; no board, hardware probes, files changed or serial writes",
+  "candidate": "after model/camera reference corrections; before final offline-test guard addition",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "conditional-offline",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n我第一次用泰山派，只想低风险检查 UART 设备是否可见、能否只读打开。\n我不知道设备号、波特率和对端协议，不要发送任何数据。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "turn": 1,
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "glob",
+      "turn": 1,
+      "step": 1
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 2,
+      "resource": "scripts/probe_uart.py"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 2,
+      "resource": "templates/quick-check-intake.md"
+    },
+    {
+      "tool": "glob",
+      "turn": 1,
+      "step": 3
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "scripts/run_baseline.sh"
+    },
+    {
+      "tool": "grep",
+      "turn": 1,
+      "step": 4
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "templates/first-use-gate.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "references/board-and-runtime.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "templates/serial-protocol-decision.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 6,
+      "resource": "scripts/probe_camera.py"
+    }
+  ],
+  "finalResponse": "## 门禁结论\n**部分通过**：只允许「不打开设备」的可见性枚举。设备号、波特率、对端协议三者皆未知，因此打开端口、监听、发送本阶段均禁止。`scripts/probe_uart.py` 我实际读过源码，它的「打开并监听」不属于本阶段允许动作。\n\n## 四类信息台账（精简）\n\n| 项目 | 已确认事实 | 用户选择 | 合理假设 | 待验证项 |\n|---|---|---|---|---|\n| 板卡/职责 | 泰山派 RK3566（用户自述首次使用） | 只做 UART 只读检查 | 板端为 Linux | 板卡版本/镜像/内核 |\n| 系统/入口 | 无 | 未定 | 能进入板端 shell | `uname -a`、当前用户与组 |\n| UART/对端 | 用户不知道设备号、波特率、协议 | 不发送任何数据 | 存在候选 tty 节点 | 原理图/IO 表/设备树/实板枚举 |\n| 安全约束 | 禁止发送数据 | 只读 | 打开可能有副作用 | RTS/DTR 是否影响对端 |\n\n## 关键断言（基于实际读到的脚本）\n1. `probe_uart.py` 虽自称 read-only，但**不是无副作用枚举**：它用 `serial.Serial(...)` 打开端口并进入监听窗口（默认 1.0 s）。命令行只暴露 `--device/--baudrate/--read-seconds/--json/--text`，**未暴露 rts/dtr/rtscts/dsrdtr/xonxoff 控制**，无法从参数层关闭打开时的控制线动作。打开 tty 会改变该设备的 termios 状态，且驱动在 open/reconfigure 时可能拉 DTR/RTS，实际后果取决于芯片、板级接线与 transceiver。\n2. 脚本硬编码 **8N1、无流控**（bytesize=8、parity=N、stopbits=1，未启用各种流控）。对端契约未知时不能假定相容。\n3. `--baudrate` 默认 115200 只是**脚本默认值**，不是用户确认值。给命令必须写 `<用户确认波特率>`。\n4. 不给 `--device` 时会对 `/dev/ttyS*`、`/dev/ttyUSB*`、`/dev/ttyACM*`、`/dev/serial/by-id/*` **逐个打开**——这正是应避免的默认遍历；`by-id` 是符号链接，`os.access`/`S_ISCHR` 判断对它也不可靠（root 下 `readable=true` 不证明真实可用）。\n5. `scripts/run_baseline.sh` 注释写「read-only」，但它会调用 `probe_camera.py`（打开摄像头并读帧，默认 30 帧）并对全部候选串口执行打开监听，**不能当纯只读枚举**。\n6. `scripts/probe_camera.py` 即便不改相机控件，也会打开 `/dev/video*` 并采集帧，与本轮 UART 目标无关，本轮不使用。\n7. 即使改用手写 `os.open(..., O_RDONLY|O_NOCTTY|O_NONBLOCK)`，Linux tty 的 open 路径仍由驱动决定是否驱动 modem 控制线，且不配置 termios 读到的是残留/未定义配置。所以「只读打开且零副作用」属**待验证假设**，不能保证。\n\n## 允许的第一步（不 open 设备）\n板端 shell 只执行纯枚举/只读命令：\n- `ls -l /dev/ttyS* /dev/ttyUSB* /dev/ttyACM* 2>/dev/null || true`\n- `ls -l /dev/serial/by-id/ 2>/dev/null || true`\n- `dmesg | grep -Ei 'tty|uart' | tail -100`\n- 可选只读核对：读 `/proc/tty/driver/serial`、`udevadm info -q property -n <候选设备>`\n\n**预期现象**：列出候选节点、权限与属主（常见组为 dialout/tty），可区分板载 ttyS* 与 USB 转串口。**不要**用 `cat /dev/ttySx` 之类方式「看看有没有数据」，那会真正占用端口。\n\n**失败排查**：无 ttyS* → UART 未在设备树启用；有 ttyS* ≠ 引脚已引出；有 ttyUSB* → 多为 USB 转串口，属另一条链路；权限不足 → 需确认是否在 dialout 组（属改动，另需确认）。\n\n**证据保存**：命令原文、原样输出、`uname -a`、`ls -l /dev/serial/by-id/`、退出码。未保存不得称「已建立基线」。\n\n## 下一阶段（打开端口的前置条件）\n同时满足才可做：设备号已确认 + 用户确认的候选波特率 + 对端 8N1/流控相容性 + RTS/DTR 副作用可接受 + 无其他进程占用（`fuser`/`lsof`）+ 打开窗口可接受。届时显式单端口：\n`python3 scripts/probe_uart.py --device <已确认设备> --baudrate <用户确认波特率> --read-seconds <确认窗口> --json`\n\n预期：`status=opened` 并打印 `received.bytes`；退出码 0=有端口打开、1=无端口打开、2=参数错。**边界**：打开成功只证明该候选配置下可访问，不证明连到了目标下位机、也不证明协议正确；收到字节数与本机是否发送无必然关系（可能是对端主动发送，也可能是噪声/回显）。\n\n## 待验证项\n1. 板卡版本/镜像/内核与设备树 UART 使能情况；2. 目标 UART 节点与物理引脚的对应（以官方原理图/IO 表为准）；3. 你是否有板端终端执行权限；4. 对端波特率、帧格式、流控与协议；5. 打开该端口是否产生 DTR/RTS 副作用；6. 是否存在占用该端口的既有进程。",
+  "rawLogSha256": "d93eb38100b44e1929fd3e70a50fa22a157d4ed4c194f3937e66753a364640df"
+}

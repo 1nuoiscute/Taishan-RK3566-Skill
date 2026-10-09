@@ -1,0 +1,63 @@
+{
+  "name": "dsh-taishan-rk3566",
+  "version": "1.6.0",
+  "description": "Taishan RK3566 competition-vision Skill for DeepSeek Harness, sharing its workflow with Codex and Claude Code.",
+  "type": "module",
+  "main": "./dsh/index.mjs",
+  "exports": {
+    ".": "./dsh/index.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dsh/index.mjs",
+    "dsh/SKILL.md",
+    "cordis.patch.yml",
+    "references/",
+    "templates/",
+    "scripts/probe_*.py",
+    "scripts/probe_system.sh",
+    "scripts/run_baseline.sh",
+    "tests/test_probe_camera.py",
+    "VERSION",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test dsh/tests/*.test.mjs",
+    "prepack": "node --check dsh/index.mjs"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1nuoiscute/Taishan-RK3566-Skill.git"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "rk3566",
+    "taishan",
+    "agent-skill",
+    "nuedc"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-skill": "0.2.0-rc.2"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-skill": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "~4.0.4",
+    "@deepseek-ai/dsh-skill": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-skill-filesystem": "0.2.0-rc.2"
+  }
+}

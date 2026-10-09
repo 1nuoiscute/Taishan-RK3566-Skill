@@ -1,0 +1,76 @@
+{
+  "scenario": "R7",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; no board, hardware probes, files changed or serial writes",
+  "candidate": "after model/camera reference corrections; before final offline-test guard addition",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "conditional-offline",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n已有 RK3566 视觉 + MSPM0 球杆控制工程。上电时球在哪里，最后好像就停在哪里；\n大幅摆动时经常不收敛。先审查，不改协议，不直接猜 PID 参数。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "turn": 1,
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "glob",
+      "turn": 1,
+      "step": 2
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 2,
+      "resource": "references/live-debugging-and-deployment.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "references/robust-vision-control.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "references/existing-project-integration.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "references/debugging-playbook.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "scripts/probe_camera.py"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "templates/first-use-gate.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "templates/perception-control-tuning.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "templates/existing-project-change.md"
+    }
+  ],
+  "finalResponse": "已加载 `taishan-rk3566` 技能，并按“已有工程 + 控制不收敛”路由实读了控制状态审查、鲁棒视觉闭环、已有工程接入、现场联调与调试顺序等参考，以及 `scripts/probe_camera.py`（确认它**不是纯只读枚举**：会打开设备采集，`--save-frame` 还会落盘）。本次只做离线审查，未执行任何硬件探针、未改文件、未发串口数据。\n\n## 一、门禁结论：部分通过\n\n材料只到“现象描述”级：没有工程源码/配置/协议/标定/日志可读，无法定位唯一根因。允许的阶段仅限**离线审查 + 证据清单**；在拿到读数前，禁止确定设备号、串口、单位、目标值、阈值、PID 增益或闭环动作。\n\n四类台账（要点）：\n- 已确认事实：RK3566 负责视觉与误差输出，MSPM0 负责电机/球杆执行与安全；存在两个现象。\n- 用户选择：不改协议、不猜 PID。\n- 合理假设（仅用于排排查顺序）：视觉经 UART 把误差/坐标发给 MSPM0；丢帧时有某种保持策略。均需验证。\n- 待验证：镜像/内核、相机节点与工作点、波特率与帧格式、坐标单位与符号、Zero 定义、目标来源、固件版本。\n\n## 二、症状 A“上电在哪就停在哪”的根因分支（按优先级）\n\n1. **目标被首帧观测覆盖**：初始化时把第一帧 `center_px` 当 setpoint，误差恒为 0，机构自然不动。这是与本现象最贴合的一条，先查目标赋值处是否有“首帧写入”。\n2. **有效观测链路从未建立**：`valid` 恒 0、串口未发布或超时；若安全契约是“保持”，结果就是停在上电姿态。须查 `valid=0` 是否**立即**使缓存观测失效，而不是回放历史位置。\n3. **软件零位 ≠ 物理回零**：无绝对编码器/限位回零/人工水平条件时，“输出 0”不代表杆水平，球可能停在摩擦平衡点。\n4. **控制器状态被每帧复位**：进入中心区/HOLD 每帧清积分微分 → 等效输出为 0；HOLD 是否用**持续时间 + 进入/退出滞回**。\n5. **执行侧未真正接管**：MSPM0 使能位、限幅为 0、死区过大；或运行的是旧固件，行为不能归因于当前源码。\n\n## 三、症状 B“大幅摆动不收敛”的根因分支\n\n1. **大运动下观测失效**：曝光过长导致运动模糊、目标丢失；动态 ROI 跟不上 → 漏检。丢掉后用“继续上一帧动作”会开环漂移。\n2. **时间契约**：端到端延迟、采集/处理/发布频率混淆；离散 PID 的 `dt` 与真实采样时间不一致；**过期观测仍在驱动执行器**。\n3. **饱和与非线性**：大误差下输出限幅/角速度限制、静摩擦、积分饱和无抗饱和 → 超调、极限环。球杆开环本就不稳定，仅 P 难以全行程收敛。\n4. **符号/单位/方向**：小误差看不出来，大摆动时一轴反向即发散。\n5. **微分噪声与抖动**：像素抖动在高速时被放大，未滤波。\n6. **编码器/反馈与视觉不同源**，或首帧被当成零速度、误判“已稳定”。\n\n两个症状很可能同源：先按“电脑看到 → 程序输出 → 板端执行 → 反馈”四段分别取证，不要用调 PID 掩盖上游错误。\n\n## 四、离线最小验证与证据清单（待板端可用后）\n\n1. 冻结基线：本地/板端文件校验和、启动入口、活动 PID/unit、配置版本、允许中断窗口。\n2. 观测契约日志：`capture_ts/processed_ts/frame_id/valid/state/center_px/size_px/quality/invalid_reason/roi/config_version`。\n3. 目标来源检查：setpoint 是否被首帧覆盖；单位、原点、正负方向。\n4. 串口原始字节 + 时间戳 + 帧边界 + 校验 + 发布频率；确认 8N1/流控与对端契约相容。\n5. 一次**大幅摆动录制序列回放**，复现漏检、超时与饱和占比；每轮只改一个主要变量并保留回滚值。\n6. 固件一致性：MSPM0 实际烧录版本与所审源码/配置一致。`scripts/probe_camera.py`、`run_baseline.sh` 只在确认识别设备与串口配置、并批准中断窗口后才能用（后者会开相机与全部候选串口）。\n\n## 五、待验证项（当前无法下结论）\n\n相机工作点与实际帧率、坐标标定与映射、串口协议与单位、目标来源、物理零位、HOLD/丢失安全契约、采样时间与限幅、固件版本；以及“上电停住”究竟是目标被覆盖还是输出未生效——需上述日志区分，不能凭现象断言。",
+  "rawLogSha256": "b4bee27e6a033704dee3c76afea5917cff5d12b25a4fc91e0a08113e24e7b262"
+}

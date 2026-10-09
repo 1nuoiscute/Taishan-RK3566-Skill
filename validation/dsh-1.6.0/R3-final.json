@@ -1,0 +1,91 @@
+{
+  "scenario": "R3",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; read/search/list and existing pure fake-object unit tests only; no files written, no board or serial access",
+  "candidate": "final 1.6.0 generated entry, before release metadata update",
+  "skillSha256": "436e6f2a60a8b118695e963cde7596d87e2b1902a31e17ec225e72d155fbdd2d",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "pass-offline-review",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n我提供的已有相机工程入口是仓库中的 scripts/probe_camera.py。\n请在保留现有 CLI 参数、退出码和已有 JSON 字段语义的前提下，\n增加“连续帧采集达到用户确认的稳定条件后才判定稳定”的功能。先检查工程，不要重写。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。允许用 Python -B 运行配套 tests/test_probe_camera.py 纯假对象测试；它不接触硬件，也不写文件。不得创建临时脚本再删除；额外假对象如需执行，必须用 Python -B stdin/-c 在内存执行。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "glob",
+      "step": 1
+    },
+    {
+      "tool": "glob",
+      "step": 2
+    },
+    {
+      "tool": "glob",
+      "step": 2
+    },
+    {
+      "tool": "read",
+      "step": 3,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_camera.py"
+    },
+    {
+      "tool": "read",
+      "step": 3,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\tests\\test_probe_camera.py"
+    },
+    {
+      "tool": "pwsh",
+      "step": 4,
+      "command": "python -B tests/test_probe_camera.py -v 2>&1; \"EXIT=$LASTEXITCODE\""
+    },
+    {
+      "tool": "grep",
+      "step": 4
+    },
+    {
+      "tool": "glob",
+      "step": 4
+    },
+    {
+      "tool": "glob",
+      "step": 5
+    },
+    {
+      "tool": "glob",
+      "step": 5
+    },
+    {
+      "tool": "pwsh",
+      "step": 6,
+      "command": "Get-ChildItem -Force -Recurse -Depth 2 \"<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\" | Select-Object -ExpandProperty FullName"
+    },
+    {
+      "tool": "read",
+      "step": 7,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\existing-project-change.md"
+    },
+    {
+      "tool": "read",
+      "step": 7,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\existing-project-integration.md"
+    }
+  ],
+  "testOutputs": [
+    {
+      "step": 4,
+      "output": "test_brightness_condition_times_out_when_unstable (__main__.StabilityTests.test_brightness_condition_times_out_when_unstable) ... ok\r\ntest_fps_condition_can_reach_stable (__main__.StabilityTests.test_fps_condition_can_reach_stable) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 2 tests in 0.000s\r\n\r\nOK\r\nEXIT=0\r\n"
+    },
+    {
+      "step": 6,
+      "output": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\dsh\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\tests\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\cordis.patch.yml\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\LICENSE\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\package.json\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\README.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\VERSION\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\dsh\\index.mjs\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\dsh\\SKILL.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\architecture-patterns.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\board-and-runtime.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\debugging-playbook.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\existing-project-integration.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\live-debugging-and-deployment.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\nuedc-topic-coverage.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\research-guidance.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\research-status.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\robust-vision-control.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\source-index.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\validation-and-evidence.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\validation-scenarios.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\vision-task-archetypes.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\yolo-rknn-validated-case.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_camera.py\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_gpio.py\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_rknn.py\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_system.sh\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_uart.py\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\run_baseline.sh\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\acceptance-checklist.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\debug-evidence.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\existing-project-change.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\first-use-gate.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\hardware-evidence-record.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\perception-control-tuning.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\performance-report.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\project-architecture.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\quick-check-intake.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\serial-protocol-decision.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\solution-options.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\task-intake.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\yolo-data-and-training.md\r\n<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\tests\\test_probe_camera.py\r\n"
+    }
+  ],
+  "finalResponse": "已完成只读检查。**未修改任何文件、未连接板端、未做硬件探测、未联网**；仅实际读取了 `scripts/probe_camera.py`、`tests/test_probe_camera.py`、`templates/existing-project-change.md`、`references/existing-project-integration.md`，并用 `python -B tests/test_probe_camera.py` 运行了配套纯假对象测试（结果：2 passed，退出码 0，未写文件）。\n\n## 门禁结论：部分通过（请求的功能已存在，不需要新增代码）\n\n**关键发现：所请求的\"连续帧采集达到稳定条件后才判定稳定\"在当前版本 probe_camera.py v0.1.2 中已经完整实现。**静态阅读发现的疑点已用实际分支核对，不能把已实现的保护说成缺失。\n\n实现证据（行号对应当前脚本）：\n\n- CLI 已有 `--stable-condition {fps,brightness,framesize}`(47)、`--stable-window`(49，默认 30)、`--stable-tolerance`(51，默认 5.0%)、`--stable-timeout`(53，默认 60s)，docstring(9-10、15-18)也已描述行为。\n- `monitor_until_stable()`(126-213) 是真正的连续采集循环：`while monotonic()-start < timeout: capture.read()`(160-161)，对每个成功帧取指标(167)、维护**滑动窗口**并裁剪到 window 帧(171-172)，仅当**该窗口内所有帧相对窗口均值的峰值偏差 ≤ 容差**时才置 `stable_at`/`outcome=\"stable\"`(173-181)。即\"稳定\"= 存在 window 个连续成功帧全部达标，不是单帧或平均帧判定。\n- 非 `stable` 路径不会输出 stable 语义：`outcome` 只取 `\"stable\"`/`\"timeout\"`(157-158)，且\"stable 不等于长期稳定\"的自述注记只在 stable 分支追加(303-311)。\n- 三种指标语义明确：fps 用相邻成功帧间隔（首帧 interval=0 返回 None，不计入）、brightness 用帧均值、framesize 对同一设备恒为常量(148-149、211)。\n\n**兼容性核对（符合\"保留 CLI/退出码/JSON 字段语义\"）**：退出码仍为 0/1/2（`status==\"ok\"` 才算 0，438；稳定模式 `read_frames` 为成功读帧数，319），**超时不改变退出码，稳定性结果由 JSON `stability.outcome` 表达**——这正是需求要求的\"不新增退出码、用 JSON 状态表达结果\"，现状已满足。已有字段 `condition/window_size/tolerance_pct/timeout_s/outcome/total_frames_read/elapsed_s/measured_fps/stable_at_s/history_size/notes`、brightness 的 `brightness_mean/brightness_range` 均保持；稳定模式下 `frames_requested` 被替换为实测帧数(293)属现有语义。\n\n## 四类台账\n\n- **已确认事实**：入口为 `scripts/probe_camera.py`；配套离线测试存在且通过；上述 CLI/JSON/退出码契约如行号所示；`--stable-window` 有 `>=5` 的既有校验(384-386)，函数内另有 `max(5,…)`(129)，二者一致。\n- **用户选择**：要求保留现有 CLI 参数、退出码和已有 JSON 字段语义；要求\"先检查、不重写\"；禁止改文件与硬件探测。稳定条件的具体取值（指标、窗口帧数、容差、超时）**尚未由用户确认**。\n- **合理假设（待验证）**：①自动曝光下 brightness 会缓慢漂移，5% 峰值容差可能长期不达标或很快达标——影响\"稳定\"含义；②板端 `capture.read()` 在 V4L2 下可能阻塞，使 `--stable-timeout` 可被单次阻塞读突破（超时只在两次 read 之间检查，160）。二者均为假设，不是事实。\n- **待验证项**（无板端，全部标待实测）：真实 FPS/延迟/稳定时间；read 阻塞与丢帧实况；相机工作点（分辨率、像素格式、AE/AWB 状态）；稳定阈值与赛题验收的对应关系。\n\n## 若确实需要\"增量\"，只有三个候选最小修改点（均需另行授权，且不破坏上述契约）\n\n1. **补采集健康度**：`read()` 失败分支(162-163)目前只 `sleep(0.005); continue`，不计数、不进 JSON。可在 `stability` 内**新增**字段（如 `read_failures`），避免\"夹杂大量丢帧仍判 stable\"。\n2. **区分超时原因**：成功帧数不足 window 时 `outcome` 仍是 `timeout`，与\"波动超容差\"不可区分（`history_size` 可间接判读）。建议**新增**字段（如 `samples_sufficient`），不改 `outcome` 既有取值。\n3. **超时的阻塞读保护**：改动面较大且需板端证据，优先级最低。\n\n真正的需求差距不在代码能力，而在\"**用户确认**\"：默认 30/5.0%/60s 只是实现默认值，不能当作已确认阈值。\n\n## 最小验证与回归（获得授权后）\n\n- 先复跑 `python -B tests/test_probe_camera.py`（基线与回归），并为新增字段补假对象用例（覆盖率缺口：现有 2 个用例只覆盖 fps 达标与 brightness 超时，未覆盖帧数不足与失败读夹杂）。\n- 新增验证须覆盖：窗口未满即超时、窗口内 1 帧超差、恰好第 window 帧达标、read 失败夹杂计数。\n- 回归口径：原 CLI 参数与退出码集合不变；JSON 只增字段不改语义；超时仍返回原退出码。\n- 回滚：单文件、无外部状态，回退到上一版脚本并重跑离线测试即可。\n\n**未做/未复验**：本地未改代码，板端未上传、未切换活动进程、未做最小功能与端到端验收；上述两项合理假设与全部性能数字均待板端实测。",
+  "rawLogSha256": "98f2c6baa06f009275c832701416a7e6443d8ad78a675b5a02c185c04aa62f4f"
+}

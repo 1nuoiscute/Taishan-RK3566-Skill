@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the Codex and Claude Code Skill entry files from one source."""
+"""Generate the Codex, Claude Code, and DeepSeek Harness Skill entry files from one source."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ TEMPLATE_PATH = Path("skill-src/SKILL.md.tmpl")
 TARGETS = {
     Path("SKILL.md"): "Codex",
     Path("claude/SKILL.md"): "Claude Code",
+    Path("dsh/SKILL.md"): "DeepSeek Harness",
 }
 
 

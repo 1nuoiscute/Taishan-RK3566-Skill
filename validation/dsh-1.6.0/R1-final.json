@@ -1,0 +1,97 @@
+{
+  "scenario": "R1",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; read/search/list and existing pure fake-object unit tests only; no files written, no board or serial access",
+  "candidate": "final 1.6.0 generated entry, before release metadata update",
+  "skillSha256": "436e6f2a60a8b118695e963cde7596d87e2b1902a31e17ec225e72d155fbdd2d",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "conditional-offline-review",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n使用 taishan-rk3566 帮我分析这道陌生视觉题：摄像头观察一个允许布置的平面区域，\n系统需要给出若干规则图形的位置，并按题面规定的误差和时间判分。帮我做。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。允许用 Python -B 运行配套 tests/test_probe_camera.py 纯假对象测试；它不接触硬件，也不写文件。不得创建临时脚本再删除；额外假对象如需执行，必须用 Python -B stdin/-c 在内存执行。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "glob",
+      "step": 2
+    },
+    {
+      "tool": "todo_write",
+      "step": 3
+    },
+    {
+      "tool": "read",
+      "step": 4,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\scripts\\probe_camera.py"
+    },
+    {
+      "tool": "read",
+      "step": 4,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\tests\\test_probe_camera.py"
+    },
+    {
+      "tool": "pwsh",
+      "step": 5,
+      "command": "python -B \"<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\tests\\test_probe_camera.py\" -v 2>&1; \"EXIT=$LASTEXITCODE\""
+    },
+    {
+      "tool": "read",
+      "step": 5,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\vision-task-archetypes.md"
+    },
+    {
+      "tool": "read",
+      "step": 6,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\robust-vision-control.md"
+    },
+    {
+      "tool": "read",
+      "step": 6,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\research-guidance.md"
+    },
+    {
+      "tool": "read",
+      "step": 6,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\first-use-gate.md"
+    },
+    {
+      "tool": "read",
+      "step": 7,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\board-and-runtime.md"
+    },
+    {
+      "tool": "read",
+      "step": 7,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\references\\nuedc-topic-coverage.md"
+    },
+    {
+      "tool": "read",
+      "step": 8,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\acceptance-checklist.md"
+    },
+    {
+      "tool": "read",
+      "step": 8,
+      "resource": "<WORKSPACE>\\tmp\\strict-r3-home\\profiles\\sdk\\node_modules\\dsh-taishan-rk3566\\templates\\quick-check-intake.md"
+    },
+    {
+      "tool": "todo_write",
+      "step": 9
+    }
+  ],
+  "testOutputs": [
+    {
+      "step": 5,
+      "output": "test_brightness_condition_times_out_when_unstable (__main__.StabilityTests.test_brightness_condition_times_out_when_unstable) ... ok\r\ntest_fps_condition_can_reach_stable (__main__.StabilityTests.test_fps_condition_can_reach_stable) ... ok\r\n\r\n----------------------------------------------------------------------\r\nRan 2 tests in 0.000s\r\n\r\nOK\r\nEXIT=0\r\n"
+    }
+  ],
+  "finalResponse": "已加载 `taishan-rk3566`，实际读取了 `scripts/probe_camera.py`(442 行, v0.1.2)、`tests/test_probe_camera.py`，以及 `vision-task-archetypes.md`、`robust-vision-control.md`、`board-and-runtime.md`、`nuedc-topic-coverage.md`、`templates/first-use-gate.md`、`acceptance-checklist.md`。按允许范围用 `python -B tests/test_probe_camera.py -v` 跑了纯假对象测试：2 passed, exit 0（未接触硬件、未写文件）。未创建/删除任何脚本，未联网搜索，未做硬件探测。\n\n## 门禁结论：部分通过\n题面只给了\"平面可布置 / 输出若干规则图形位置 / 按误差与时间判分\"三个骨架，设备号、分辨率、误差口径、时限、形状集合、布置规则全未确认。因此只能做**离线方案骨架 + 最小验证**，不得给出参数组、可执行闭环代码或达标承诺。\n\n## 四类台账（要点）\n- **已确认事实**：本包 `probe_camera.py` 存在，exit 0/1/2 = 读到帧/无成功采集/参数或内部错误；`--stable-condition fps|brightness|framesize` 的窗口≥5、容差按百分比、超时默认 60s；配套测试为纯假对象、可离线通过（本次实测）。\n- **用户选择**：离线审查、不碰硬件、不改文件、不联网；额外假对象只能用 `python -B` stdin/-c 内存执行。\n- **合理假设**（须标注影响+验证法）：观察对象是允许布置的平面区域；相机与执行侧相对固定；形状为规则几何体。假设不成立则轮廓/几何路线与坐标映射全部要改。\n- **待验证项**：题面误差定义（像素/毫米/相对）、计时口径（采集…输出）、形状类别与数量、平面是否带参考标记/格点、相机是否允许标定、光照受控程度、图形是否旋转/重叠/出界、判分是否要求物理单位。\n\n## 任务分类与路线\n主类型=**静态目标测量（规则几何）**，次类型=传统视觉识别。\n推荐路线：ROI→颜色/灰度分离→阈值+形态学→轮廓提取→多边形/圆拟合与几何筛选（面积、圆度 `4πA/P²`、边数、凸性）→逐目标取位置量→像素到平面的映射→带契约的结果输出。\n被排除：直接上 YOLO/RKNN——类别语义固定、几何可解释，且无授权模型、无数据、无板端实测证据，属无证据路线；仅当传统路线在赛场上出现可复现的失败证据时再评估。\n关键动作是**先把题面的\"位置\"对齐**：圆心/轮廓质心/包围盒角点/物理象限坐标含义必须与判分脚本一致，否则算法再准也判错。单目像素量只有完成平面标定（已知参考尺寸、参考点或题目允许的几何约束）后才能带单位；否则只输出 `center_px/size_px`。\n\n## 观测契约与探针的真实作用\n每个结果至少含 `capture_ts/processed_ts/frame_id/valid/state/bbox/center_px/size_px/quality/invalid_reason/roi/config_version`。`probe_camera` 只承担**采集与工作点基线**：它报告实测帧尺寸、实际 fourcc 与实测 FPS，格式参数（`--width/--height/--fps/--fourcc`）是对设备的设置请求，不是支持性证明；它**不测端到端延迟**，也没有逐帧时间戳或抖动分布——`fps` 稳定性只是窗口内瞬时帧间隔的离散度，不能当判分计时证据。另注：传格式参数会改动设备采集配置，故不能说该探针\"不改任何相机参数\"。\n\n## 最小验证与证据\n① 已有离线基线：`python -B tests/test_probe_camera.py`（已通过）。\n② 用同一内存假对象补一条：把\"图→位置\"流水线跑在合成帧上，断言候选数、位置排序、拒绝原因与 `valid=0` 路径；只用 `python -B -c`，不落盘。\n③ 固定图片/录制序列回放，保存原图、中间掩膜、全部候选、最终选择与拒绝原因；判据是固定输入可重复、无目标时输出\"无效\"而非编造。\n④ 板端（待授权后）：固定机位单帧→固定目标重复测量误差→不同位置/姿态误差矩阵→采集/处理/发布频率与端到端延迟分开记录→连续运行时间与异常次数。\n\n## 降级路线\n多候选时按几何+时序一致性筛选而非永远取最大；透视/反光导致轮廓破碎时限制 ROI、增加几何复核、只输出可证明的像素量或请求重新观测；无法标定时缩小有效工作区、增加题目允许的参考、把输出粒度降到像素坐标；时序上定义 SEARCH→CANDIDATE→CONFIRMED→LOST 并设进入/退出滞回。\n\n## 缺口与下一步\n最大缺口是**评分契约**：误差口径、时限起点终点、形状集合、布置规则、是否允许标定和参考标记。请提供原始题面/评分表；拿到后再定形状清单、候选筛选判据与标定方案。在此之前不固定设备号、分辨率、后端、阈值组、形态学核、帧数或精度指标，命令中一律用 `<已确认设备>`、`<已确认分辨率>`、`<已验证参数>` 占位。",
+  "rawLogSha256": "2e583db879dc137543bdcf3b41a2c7a68825d60bb368047ba1be92cdd980f0c3",
+  "reviewNotes": "Safe task routing and real fake-object baseline; board/system/interface gaps were not centrally enumerated. Internal todo_write updates do not modify project files."
+}

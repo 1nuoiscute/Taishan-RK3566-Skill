@@ -1,0 +1,70 @@
+{
+  "scenario": "R4",
+  "date": "2026-10-09",
+  "dsh": "0.2.0-rc.2",
+  "requestedModel": "deepseek-flash",
+  "scope": "synthetic offline review; no board, hardware probes, files changed or serial writes",
+  "candidate": "after model/camera reference corrections; before final offline-test guard addition",
+  "termination": {
+    "kind": "completed"
+  },
+  "reviewVerdict": "conditional-offline",
+  "input": "请先加载 taishan-rk3566 技能。以下为合成场景，只做离线审查/方案；没有可连接的板端，不执行硬件探针、不修改文件、不发送串口数据。允许按需读取插件配套文件。若材料不足，明确待验证项。最终回答控制在约1000字，完整覆盖当前场景相关断言；不要联网搜索。\n\n我已有 best.pt，想在泰山派 RK3566 上用 YOLO 实时识别。先给我最短能验证的部署路径，\n并告诉我静态图检出后还必须验证什么。\n\n文件入口 scripts/probe_camera.py 等均指插件资源目录内现有文件；有需要先实际读取再分析。",
+  "toolCalls": [
+    {
+      "tool": "skill",
+      "turn": 1,
+      "step": 1,
+      "name": "taishan-rk3566"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 2,
+      "resource": "references/yolo-rknn-validated-case.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 2,
+      "resource": "references/existing-project-integration.md"
+    },
+    {
+      "tool": "glob",
+      "turn": 1,
+      "step": 3
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 3,
+      "resource": "references/board-and-runtime.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "scripts/probe_camera.py"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 4,
+      "resource": "references/validation-and-evidence.md"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "scripts/probe_rknn.py"
+    },
+    {
+      "tool": "read",
+      "turn": 1,
+      "step": 5,
+      "resource": "templates/yolo-data-and-training.md"
+    }
+  ],
+  "finalResponse": "已加载 `taishan-rk3566`，并读取了插件内 `scripts/probe_camera.py`、`scripts/probe_rknn.py`、`references/board-and-runtime.md`、`references/yolo-rknn-validated-case.md`、`references/validation-and-evidence.md`、`templates/yolo-data-and-training.md`。本场景为离线审查：未连板、未执行探针、未改文件、未发串口数据。\n\n## 门禁结论：部分通过\n已知：你持有 `best.pt`、目标板 RK3566。**不足以**确定 YOLO 版本、模型族、输入布局、输入尺寸、类别、许可证、数据集、Runtime/驱动版本、摄像头节点与工作点。`best.pt` 文件名不能推导以上任何一项（历史案例的 YOLOv8、320/256 INT8、多分支输出只是**案例条件**，不可照抄）。因此以下路径必须先补契约，否则只能停在探测。\n\n## 四类台账（摘要）\n- **已确认事实**：你已有 `best.pt`；目标是泰山派 RK3566 上做 YOLO 实时识别。\n- **用户选择**：走模型路线（尚需你确认是否已排除颜色/几何/标定等传统视觉可满足的方案）。\n- **合理假设**：模型经与当前结构匹配的官方导出转为 RKNN；解码位置与后处理由实际输出个数/形状决定，不预设 DFL 下移、不预设 NHWC/NCHW、不预设 batch 维。\n- **待验证**：镜像/内核/架构、OpenCV、RKNN Toolkit/Runtime/驱动版本矩阵、`librknn*.so` 是否与 RK3566 匹配（案例中出现过误装 RK3588 专用 Runtime 导致 `init_runtime` 失败）、摄像头节点与像素格式/分辨率/曝光、模型输入输出契约、板端精度与延迟。\n\n## 最短可验证部署路径（板端 Remote-SSH 内执行；本机不代跑）\n1. **只读系统基线**：`/etc/os-release`、`uname -a/-m`、`python3 -V`、`command -v g++`，保存输出与退出码。\n2. **只读枚举摄像头**：`ls -l /dev/video* /dev/media*`、`v4l2-ctl --list-devices`、`dmesg | grep -Ei 'video|v4l2'`。节点身份/权限/所有权确认、并确认无采集进程占用后，再跑 `python3 scripts/probe_camera.py --device <已确认设备> --text`（该探针会打开设备并采集，是副作用操作，不是纯枚举；不要默认遍历全部节点）。\n3. **只读发现 NPU 运行时**：`python3 scripts/probe_rknn.py --text`——只证明可导入/有节点与库，**不证明模型能跑**。\n4. **核对模型契约（关键前置）**：在电脑端读取 `best.pt` 的框架/模型族、输入尺寸与布局、每个输出张量的数量与形状、类别数与许可证。\n5. **按契约选导出路线**：仅当确认与 Rockchip 官方优化工具相容时才用优化导出；否则用与\n  当前结构匹配的原始导出。新 ONNX/RKNN/脚本放独立目录，不动原 `best.pt`，记录框架、导出器版本、Toolkit/Runtime/驱动、输入大小与量化参数。\n6. **转换 + 板端 Runtime 版本对齐**（按实际加载路径处理匹配 RK3566 的 Runtime，仅改环境变量未必生效）。\n7. **静态图端到端冒烟**：依次记录 `load_rknn`、`init_runtime`、输入张量维度、单次推理耗时、检测数与带框图。缺少 batch 维时只补维、保留已确认的维度顺序。静态 shape 的 dynamic-range 查询警告按实际返回值判断，不以\"能忽略\"一概处理。\n8. **摄像头完整循环**：分开记录采集帧率、NPU 时间、后处理、显示/推流、发布频率、端到端延迟。单次 NPU 耗时不得写成相机 FPS。\n\n## 静态图检出后还必须验证什么\n1. **导出/量化未改变行为**：同一张图分别跑原始框架模型、板端 FP16（若有）、板端 INT8，比较置信度分布与检测结果；确认预处理（letterbox、归一化、色彩顺序）一致。类别映射错位或低置信目标丢失是常见信号。\n2. **摄像头循环独立成立**：静态图不覆盖采集、格式协商、曝光收敛、缓冲丢弃、并发。需连续运行数分钟，记录实际分辨率/像素格式/丢帧/花屏。\n3. **真实原始帧分诊**：保存含目标、无目标、远近、倾斜、运动模糊、不同光照的**板端原图**，同一批跑三种模型，区分\"数据/模型泛化不足\"与\"导出预处理/量化退化\"——案例中正是实时大量漏检、溯源到原训练模型泛化不足；\"板端能跑\"≠\"识别可验收\"。\n4. **指标与资源**：误检率、漏检率、重捕获时间、端到端延迟、CPU/内存/NPU 占用、连续运行时间与异常次数——全部需目标板实测，未测写\"待实测\"。\n5. **工作点与集成**：摄像头绑定（勿固化易变编号）、像素格式、曝光/白平衡锁定或自动的取舍、坐标/标定与单位、下位机协议与安全动作契约。\n\n## 降级路线与待验证项\n若导出契约无法确认：保留原 `best.pt`，先在板端用原框架做静态图基线，或降级到传统视觉（颜色/几何/标定）方案，不生成完整闭环代码。性能、帧率、精度、稳定时间一律标注\"待实测\"；无实测前不输出具体阈值组、引脚号、波特率或闭环命令，只用 `<已确认设备>`、`<已确认波特率>`、`<已验证参数>` 占位符。",
+  "rawLogSha256": "65298cc3658ee26ac066453d350cd9974f0bb0878a84f3d6daab66b35bdbdfeb"
+}

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -15,6 +16,10 @@ REQUIRED_FILES = (
     "VERSION",
     "SKILL.md",
     "claude/SKILL.md",
+    "dsh/SKILL.md",
+    "dsh/index.mjs",
+    "package.json",
+    "cordis.patch.yml",
     "skill-src/SKILL.md.tmpl",
     "README.md",
     "agents/openai.yaml",
@@ -37,7 +42,7 @@ REQUIRED_FILES = (
 )
 STATE_LABELS = ("已确认事实", "用户选择", "合理假设", "待验证")
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
-PLATFORM_SKILLS = ("SKILL.md", "claude/SKILL.md")
+PLATFORM_SKILLS = ("SKILL.md", "claude/SKILL.md", "dsh/SKILL.md")
 SHARED_ROUTES = (
     "references/source-index.md",
     "references/nuedc-topic-coverage.md",
@@ -103,6 +108,13 @@ def main(root: Path = DEFAULT_ROOT) -> int:
     ):
         errors.append(f"VERSION is not semantic x.y.z with optional prerelease: {version!r}")
 
+    package = json.loads(read("package.json"))
+    if package.get("version") != version:
+        errors.append("DSH package version differs from VERSION")
+    if package.get("dsh", {}).get("bundle", {}).get("patch") != "./cordis.patch.yml":
+        errors.append("DSH bundle patch is missing")
+    if "DeepSeek Harness" not in read("dsh/SKILL.md"):
+        errors.append("dsh/SKILL.md does not identify DeepSeek Harness")
     readme = read("README.md")
     if f"v{version}" not in readme:
         errors.append("README.md does not contain the VERSION value")
@@ -134,6 +146,7 @@ def main(root: Path = DEFAULT_ROOT) -> int:
     expected_platform_skills = {
         "SKILL.md": template.replace("{{PLATFORM}}", "Codex"),
         "claude/SKILL.md": template.replace("{{PLATFORM}}", "Claude Code"),
+        "dsh/SKILL.md": template.replace("{{PLATFORM}}", "DeepSeek Harness"),
     }
     for relative_path, expected in expected_platform_skills.items():
         if platform_skills[relative_path] != expected:
@@ -267,6 +280,8 @@ def main(root: Path = DEFAULT_ROOT) -> int:
         if command not in workflow:
             errors.append(f"CI workflow lacks required check: {command}")
     for markdown_file in ROOT.rglob("*.md"):
+        if any(part in {".git", "node_modules", "dist", "tmp"} for part in markdown_file.relative_to(ROOT).parts):
+            continue
         content = markdown_file.read_text(encoding="utf-8")
         for raw_target in LINK_PATTERN.findall(content):
             target = raw_target.strip().split("#", 1)[0]
